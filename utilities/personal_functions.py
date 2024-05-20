@@ -104,7 +104,7 @@ def text(*message: object, letter_time: float = .025, line_delay: float = 0,
 
 def color_print(*message: object, sep: str = " ", end: str = "\n",
                 mods: list = None, flush: bool = True) -> None:
-    """Mimic print() but with color.
+    """Mimic print() but with color_scheme.
 
     Args:
         *message (str, optional):
@@ -285,7 +285,7 @@ def intput(*message: object, letter_time: int = .025, line_delay: int = 0,
             Defaults to "That's not an integer. Please enter an integer:"
         fail_mods (str, optional):
             The message to give if the original input is invalid.
-            Defaults to [color.ERROR]
+            Defaults to [color_scheme.ERROR]
 
     Returns:
         int: The integer value of the user's input.
@@ -342,7 +342,7 @@ def floatput(*message: str, sep: str = " ", letter_time: float = .025,
             "That's not a floating point value. Please enter a floating point value:"
         fail_mods (str, optional):
             The message to give if the original input is invalid. Defaults to
-            [color.ERROR]
+            [color_scheme.ERROR]
 
     Returns:
         float: The floating point value of the user's input.

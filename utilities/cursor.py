@@ -28,26 +28,19 @@
     cursor_print(): Print text at the current cursor position.
 """
 
-import time
-
 import color
 
 
 class Cursor:
 
     def __init__(self) -> None:
-        """Initialize the Cursor object.
-
-        Args:
-            screen (tuple[int, int]):
-                The dimensions of the screen [width, height].
-        """
-        # self.screen_width = screen[0]
-        # self.screen_height = screen[1]
+        """Initialize the Cursor object."""
+        self.screen_width = 1
+        self.screen_height = 1
         self.hidden = False
         self.screen_saved = False
         self.set_pos()
-        self.cursor_pos = [0, 0]
+        self.cursor_pos = [1, 1]
         self.cursor_pos_saved = None
 
     def set_screen(self, screen: tuple[int, int]) -> None:
@@ -196,7 +189,7 @@ class Cursor:
                 The line or y-axis to set the position of the cursor to.
                 Defaults to 0. (The top of the screen)
         """
-        print(f"\033[{line};{column}H", end="")
+        print(f"\033[{line+1};{column+1}H", end="")
         self.cursor_pos = [column, line]
 
     def get_pos(self) -> list[int]:
@@ -330,140 +323,143 @@ class Cursor:
         for i in (mods if mods is not None else []):
             print(i, end="")
 
-    # Calculate the available space.
-    def line_wrap_formatter(self, message: tuple, boundaries: dict[str, int], sep: str, end: str, wrap_words: bool,
-                            center_lines: bool, cutoff_ending: str | None) -> list[str]:
-        """Wrap the message to fit within the boundaries.
-
-        Args:
-            message (tuple):
-                The message to wrap.
-            boundaries (dict[str, int]):
-                The boundaries of the text, inclusive.
-            sep (str):
-                The separator between each item in the message.
-            end (str):
-                The ending character to append to the message.
-            wrap_words (bool):
-                Determines if words should be wrapped intact if possible or not.
-            center_lines (bool):
-                Determines if the lines should be centered in the boundaries.
-            cutoff_ending (str | None):
-                The ending to append to the message if it is cut off.
-
-        Returns:
-            list[str]: The wrapped message.
-        """
-        right = boundaries["right"]
-        left = boundaries["left"]
-        top = boundaries["top"]
-        bottom = boundaries["bottom"]
-
-        first_line_length = right - max(self.cursor_pos[0], left)
-        following_line_length = right - left
-        max_following_lines = top - bottom
-
-        # maximum_chars = max_following_lines * following_line_length + first_line_length
-
-        full_message = sep.join(message) + end
-
-        max_line_letters = first_line_length
-        coloring = False
-        printing_lines = []
-        current_printing_line = ""
-        current_word = ""
-
-        for char in full_message:
-            # Check if the message is too long and kill if so.
-            if len(current_printing_line) >= max_line_letters and len(printing_lines) >= max_following_lines:
-                current_printing_line = current_printing_line[:max_line_letters - len(cutoff_ending)] + cutoff_ending
-                break
-            # Checks to see if a color code was found.
-            if not coloring:
-                # Check for special characters.
-
-                # If a newline is found, it creates a new line.
-                if char == "\n":
-                    printing_lines.append(current_printing_line.strip())
-                    max_line_letters = following_line_length
-                    current_printing_line = ""
-                    current_word = ""
-                    continue
-                # Ignore carriage returns and backspaces.
-                if char == "\r":
-                    continue
-                if char == "\b":
-                    continue
-                if char == "\t":
-                    # If the tab would otherwise go over the line length, ignore it.
-                    if len(current_printing_line) + 4 > max_line_letters:
-                        # Create a new line.
-                        printing_lines.append(current_printing_line.strip())
-                        max_line_letters = following_line_length
-                        current_printing_line = ""
-                        current_word = ""
-                        continue
-                    # Add a tab if it fits.
-                    current_printing_line += " " * 4
-                    current_word = ""
-                    continue
-                # If a color code is found, it sets the coloring flag to True.
-                if char == "\033":
-                    coloring = True
-                    continue
-                # If a space is found, it ends the current word and potentially the current line.
-                if char == " ":
-                    # End the current word.
-                    current_word = ""
-
-                    # If the space would otherwise go over the line length,
-                    # cut it off at the end of the line and ignore it.
-                    if len(current_printing_line) == max_line_letters:
-                        # Create a new line.
-                        printing_lines.append(current_printing_line.strip())
-                        max_line_letters = following_line_length
-                        current_printing_line = ""
-                        continue
-
-                    # Add a space if it fits.
-                    current_printing_line += " "
-                    continue
-                # If a regular character is found, it adds it to the current line and word.
-                else:
-                    # If the line is full, it creates a new line with the current word or letter.
-                    if len(current_printing_line) == max_line_letters:
-                        if not wrap_words or len(current_word) > max_line_letters:
-                            printing_lines.append(current_printing_line.strip())
-                            max_line_letters = following_line_length
-                            current_printing_line = char
-                            current_word = char
-                            continue
-
-                        # If the word is not too long yet, it adds it to the next line.
-                        current_printing_line.removesuffix(current_word)
-
-                        printing_lines.append(current_printing_line.strip())
-                        max_line_letters = following_line_length
-                        current_word += char
-                        current_printing_line = current_word
-                        continue
-                    # Otherwise, just add the letter to the current line and word.
-                    current_printing_line += char
-                    current_word += char
-                    continue
-            # If a color code was found, it checks for the end of the code.
-            else:
-                if char == "m":
-                    coloring = False
-                continue
-
-        # Do a bit of formatting
-        if center_lines:
-            for i, line in enumerate(printing_lines):
-                if len(line) < following_line_length:
-                    if i == 0 and first_line_length < following_line_length:
-                        printing_lines[i] = line.center(first_line_length)
-                    printing_lines[i] = line.center(following_line_length)
+    # # Calculate the available space.
+    # def line_wrap_formatter(self, message: tuple, boundaries: dict[str, int], sep: str, end: str, wrap_words: bool,
+    #                         center_lines: bool, cutoff_ending: str | None) -> list[str]:
+    #     """Wrap the message to fit within the boundaries.
+    #
+    #     Args:
+    #         message (tuple):
+    #             The message to wrap.
+    #         boundaries (dict[str, int]):
+    #             The boundaries of the text, inclusive.
+    #         sep (str):
+    #             The separator between each item in the message.
+    #         end (str):
+    #             The ending character to append to the message.
+    #         wrap_words (bool):
+    #             Determines if words should be wrapped intact if possible or not.
+    #         center_lines (bool):
+    #             Determines if the lines should be centered in the boundaries.
+    #         cutoff_ending (str | None):
+    #             The ending to append to the message if it is cut off.
+    #
+    #     Returns:
+    #         list[str]: The wrapped message.
+    #     """
+    #     right = boundaries["right"]
+    #     left = boundaries["left"]
+    #     top = boundaries["top"]
+    #     bottom = boundaries["bottom"]
+    #
+    #     first_line_length = right - max(self.cursor_pos[0], left)
+    #     following_line_length = right - left
+    #     max_following_lines = top - bottom
+    #
+    #     # maximum_chars = max_following_lines * following_line_length + first_line_length
+    #
+    #     full_message = sep.join(message) + end
+    #
+    #     max_line_letters = first_line_length
+    #     coloring = False
+    #     printing_lines = []
+    #     current_printing_line = ""
+    #     current_word = ""
+    #
+    #     for char in full_message:
+    #         # Check if the message is too long and kill if so.
+    #         if len(current_printing_line) >= max_line_letters and len(printing_lines) >= max_following_lines:
+    #             current_printing_line = current_printing_line[:max_line_letters - len(cutoff_ending)] + cutoff_ending
+    #             printing_lines.append(current_printing_line)
+    #             break
+    #         # Checks to see if a color_scheme code was found.
+    #         if not coloring:
+    #             # Check for special characters.
+    #
+    #             # If a newline is found, it creates a new line.
+    #             if char == "\n":
+    #                 printing_lines.append(current_printing_line.strip())
+    #                 max_line_letters = following_line_length
+    #                 current_printing_line = ""
+    #                 current_word = ""
+    #                 continue
+    #             # Ignore carriage returns and backspaces.
+    #             if char == "\r":
+    #                 continue
+    #             if char == "\b":
+    #                 continue
+    #             if char == "\t":
+    #                 # If the tab would otherwise go over the line length, ignore it.
+    #                 if len(current_printing_line) + 4 > max_line_letters:
+    #                     # Create a new line.
+    #                     printing_lines.append(current_printing_line.strip())
+    #                     max_line_letters = following_line_length
+    #                     current_printing_line = ""
+    #                     current_word = ""
+    #                     continue
+    #                 # Add a tab if it fits.
+    #                 current_printing_line += " " * 4
+    #                 current_word = ""
+    #                 continue
+    #             # If a color_scheme code is found, it sets the coloring flag to True.
+    #             if char == "\033":
+    #                 coloring = True
+    #                 continue
+    #             # If a space is found, it ends the current word and potentially the current line.
+    #             if char == " ":
+    #                 # End the current word.
+    #                 current_word = ""
+    #
+    #                 # If the space would otherwise go over the line length,
+    #                 # cut it off at the end of the line and ignore it.
+    #                 if len(current_printing_line) == max_line_letters:
+    #                     # Create a new line.
+    #                     printing_lines.append(current_printing_line.strip())
+    #                     max_line_letters = following_line_length
+    #                     current_printing_line = ""
+    #                     continue
+    #
+    #                 # Add a space if it fits.
+    #                 current_printing_line += " "
+    #                 continue
+    #             # If a regular character is found, it adds it to the current line and word.
+    #             else:
+    #                 # If the line is full, it creates a new line with the current word or letter.
+    #                 if len(current_printing_line) == max_line_letters:
+    #                     if not wrap_words or len(current_word) > max_line_letters:
+    #                         printing_lines.append(current_printing_line.strip())
+    #                         max_line_letters = following_line_length
+    #                         current_printing_line = char
+    #                         current_word = char
+    #                         continue
+    #
+    #                     # If the word is not too long yet, it adds it to the next line.
+    #                     current_printing_line.removesuffix(current_word)
+    #
+    #                     printing_lines.append(current_printing_line.strip())
+    #                     max_line_letters = following_line_length
+    #                     current_word += char
+    #                     current_printing_line = current_word
+    #                     continue
+    #                 # Otherwise, just add the letter to the current line and word.
+    #                 current_printing_line += char
+    #                 current_word += char
+    #                 continue
+    #         # If a color_scheme code was found, it checks for the end of the code.
+    #         else:
+    #             if char == "m":
+    #                 coloring = False
+    #             continue
+    #
+    #     # Do a bit of formatting (Centering text)
+    #     if center_lines:
+    #         for i, line in enumerate(printing_lines):
+    #             if len(line) < following_line_length:
+    #                 if i == 0 and first_line_length < following_line_length:
+    #                     printing_lines[i] = line.center(first_line_length)
+    #                 printing_lines[i] = line.center(following_line_length)
+    #
+    #     return printing_lines
 
     # def text(*message: object, letter_time: float = .025, line_delay: float = 0,
     #          sep: str = " ", end: str = "\n", mods: list = None, flush: bool = True) -> None:
@@ -511,13 +507,13 @@ class Cursor:
     #     # Cleans up and optionally waits at the end.
     #     sleep(line_delay * speed)
     #     if not mods is None:
-    #         print(color.END, end="")
+    #         print(color_scheme.END, end="")
     #     print(end=end)
 
 
 # Testing
 if __name__ == "__main__":
-    cursor = Cursor((50, 20))
+    cursor = Cursor()
     cursor.cursor_print("Hello World, this Is A Test Of The Cursor Print Function",
                         letter_time=.025, line_delay=0, sep=" ", end="\n", mods=[color.BOLD, color.GREEN], flush=True,
                         boundaries={"right": 50, "left": 0, "top": 0, "bottom": 20}, move_to_start=True,
@@ -530,17 +526,17 @@ if __name__ == "__main__":
     # # cursor._ending()
     # print("Pizza")
     # print(len(""))
-    # print(len(color.BLUE))
-    # print(color.BLUE)
-    # print(len(f"{color.BLUE}"))
-    # print(f"{color.RED}red{color.BLUE}blue{color.BRIGHT_WHITE}bright_white{color.END}end")
+    # print(len(color_scheme.BLUE))
+    # print(color_scheme.BLUE)
+    # print(len(f"{color_scheme.BLUE}"))
+    # print(f"{color_scheme.RED}red{color_scheme.BLUE}blue{color_scheme.BRIGHT_WHITE}bright_white{color_scheme.END}end")
     # print(f"""
-    # {color.BLACK}black
-    # {color.BRIGHT_BLACK}bright_black
-    # {color.WHITE}white
-    # {color.DEFAULT_COLOR}default
-    # {color.BRIGHT_WHITE}bright_white""")
+    # {color_scheme.BLACK}black
+    # {color_scheme.BRIGHT_BLACK}bright_black
+    # {color_scheme.WHITE}white
+    # {color_scheme.DEFAULT_COLOR}default
+    # {color_scheme.BRIGHT_WHITE}bright_white""")
     # print(len("\n"))
-    # for letter in color.BLUE:
+    # for letter in color_scheme.BLUE:
     #     print(letter, end=" ")
     # print()

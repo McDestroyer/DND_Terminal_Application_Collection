@@ -19,8 +19,8 @@ Desc: A general note-taking app designed for DND.
 # pylint: disable=import-error
 
 
-# This is an importer I made for all of my programs going forward so I wouldn't have to deal with
-# creating and renaming the personal_functions.py and universal_colors.py for every program
+# This is an importer I made for all of my programs going forward, so I wouldn't have to deal with
+# creating and renaming the utilities files for every program or have to deal with learning the "correct" methods.
 import sys
 import os
 
@@ -28,16 +28,17 @@ import_directory = os.path.dirname(os.path.realpath(__file__))
 
 while "utilities" not in os.listdir(import_directory):
     import_directory = os.path.dirname(import_directory)
-import_directory = os.path.join(import_directory, "utilities")
 
+import_directory = os.path.join(import_directory, "utilities")
+sys.path.append(import_directory)
+
+# Optionally add if you want to use the terminal system.
+import_directory = os.path.join(import_directory, "TerminalSystem")
 sys.path.append(import_directory)
 
 
 import audio
-import color
-import cursor
-import animations
-import keyboard_input as keybd
+from terminal_manager import TerminalManager as terminal
 from personal_functions import *
 
 
