@@ -1,10 +1,8 @@
-import shutil
-
 import color
-import audio
 import cursor as cursor_manager
-import animations
+import display
 import keyboard_input as kb
+import window_manager
 from personal_functions import *
 
 
@@ -27,8 +25,13 @@ class TerminalManager:
 
     color_scheme = {}
 
-    def __init__(self) -> None:
-        """Initialize the TerminalManager object."""
+    def __init__(self, screen_size: tuple[int, int]) -> None:
+        """Initialize the TerminalManager object.
+
+        Args:
+            screen_size (tuple[int, int]):
+                The minimum screen size (y, x).
+        """
 
         self.kb = kb.KeyboardInput()
         print("Keyboard input initialized.")
@@ -39,32 +42,30 @@ class TerminalManager:
         self.cursor.clear_screen()
 
         # Calibrate the screen size.
-        screen = self.get_screen_size()
+        screen = self.get_screen_size(screen_size)
         print(screen)
         input()
         self.cursor.set_screen(screen)
 
+        # Set up the display.
+        self.display = display.Display(screen_size)
+        self.window_manager = window_manager.WindowManager(screen_size)
+
         # Set up the color scheme.
         self.color_scheme = self.default_color_scheme
 
-    def main_loop(self) -> None:
-        """Main loop."""
-        # text("What would you like to do?", mods=[color.BOLD, color.BLUE])
-        self.print_options()
-
-    def print_options(self) -> None:
-        """Print the options."""
-        for option in self.options:
-            text(option[0], mods=[color.BOLD, color.GREEN])
-
-    def get_screen_size(self) -> tuple[int, int]:
+    def get_screen_size(self, min_screen_size: tuple[int, int]) -> tuple[int, int]:
         """Get the screen size.
 
+        Args:
+            min_screen_size (tuple[int, int]):
+                The minimum screen size (y, x).
+
         Returns:
-            tuple[int, int]: The screen size (x, y).
-            """
-        x = 208
-        y = 26
+            tuple[int, int]: The screen size (y, x).
+        """
+        x = 156
+        y = 41
 
         # self.cursor.set_pos()
         # self.cursor.cursor_print()
@@ -79,13 +80,12 @@ class TerminalManager:
 
             if finish:
                 break
-
             if up:
-                y = max(y - 1, 0)
+                y = max(y - 1, min_screen_size[0])
             if down:
                 y += 1
             if left:
-                x = max(x - 1, 0)
+                x = max(x - 1, min_screen_size[1])
             if right:
                 x += 1
 
@@ -99,18 +99,18 @@ class TerminalManager:
                     print(color.YELLOW + "█"*(x-1) + color.BLUE + "█" + color.END, end="", flush=True)
                     continue
                 print(color.GREEN + "█"*(x-1) + color.RED + "█" + color.END, end="", flush=True)
-            print("x: " + str(x) + "y: " + str(y), end="", flush=True)
+            print("x: " + str(x) + " y: " + str(y), end="", flush=True)
 
             # Sleep to avoid excessive speed
             sleep(0.025)
 
-        return x, y
+        return y+1, x
 
 
 if __name__ == "__main__":
     fail_screen = (1, 1)
     try:
-        terminal = TerminalManager()
+        terminal = TerminalManager((20, 50))
         # terminal.main_loop()
     except KeyboardInterrupt:
         cursor_manager.Cursor().show()
