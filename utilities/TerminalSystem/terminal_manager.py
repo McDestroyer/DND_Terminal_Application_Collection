@@ -34,7 +34,7 @@ import color
 import cursor as cursor_manager
 import keyboard_input as kb
 import window_manager
-from terminal_objects import *
+import terminal_objects as TObj
 
 
 class TerminalManager:
@@ -141,7 +141,7 @@ if __name__ == "__main__":
         terminal = TerminalManager((20, 50))
         terminal.window_manager.add_screen("home")
         terminal.window_manager.set_current_screen("home")
-        box = Box(
+        box = TObj.Box(
             "Bob Box", None, None, coordinates=(5, 10), size=(10, 15),
             text="This is a box. I am happy!", title="Bob Box", border_color=color.RED,
             title_mods=[color.BOLD, color.UNDERLINE, color.BLUE, color.BACKGROUND_RED],
