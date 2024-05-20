@@ -1,17 +1,17 @@
 import color
 
 
-def bounded_text_formatter(message: tuple | str | list, boundaries: dict[str, int], sep: str, end: str,
+def bounded_text_formatter(message: tuple | str | list, size: tuple[int, int], sep: str, end: str,
                            wrap_words: bool, center_lines: bool, cutoff_ending: str | None) -> list[str]:
     """Wrap the message to fit within the boundaries and convert it to the grid_to_add format.
 
-    WARNING: Do not use this function to wrap text that contains color codes or some other special characters.
+    WARNING: Do not use this function to wrap text that contains color_scheme codes or some other special characters.
 
     Args:
         message (tuple | str | list):
             The message to wrap.
-        boundaries (list[tuple[int, int]]):
-            The boundaries of the text, [(top_left_y, top_left_x), (bottom_right_y, bottom_right_x)] inclusive.
+        size (tuple[int, int]):
+            The number of rows and columns free for the text, (y, x).
         sep (str):
             The separator between each item in the message.
         end (str):
@@ -26,18 +26,12 @@ def bounded_text_formatter(message: tuple | str | list, boundaries: dict[str, in
     Returns:
         list[str]: The wrapped message.
     """
-    right = boundaries["right"]
-    left = boundaries["left"]
-    top = boundaries["top"]
-    bottom = boundaries["bottom"]
 
-    first_line_length = right - max(0, left)
-    following_line_length = right - left
-    max_following_lines = top - bottom
+    max_line_letters = size[1]
+    max_following_lines = size[0] - 1
 
     full_message = sep.join(message) + end
 
-    max_line_letters = first_line_length
     printing_lines = []
     current_printing_line = ""
     current_word = ""
@@ -54,7 +48,6 @@ def bounded_text_formatter(message: tuple | str | list, boundaries: dict[str, in
         # If a newline is found, it creates a new line.
         if char == "\n":
             printing_lines.append(current_printing_line.strip())
-            max_line_letters = following_line_length
             current_printing_line = ""
             current_word = ""
             continue
@@ -68,7 +61,6 @@ def bounded_text_formatter(message: tuple | str | list, boundaries: dict[str, in
             if len(current_printing_line) + 4 > max_line_letters:
                 # Create a new line.
                 printing_lines.append(current_printing_line.strip())
-                max_line_letters = following_line_length
                 current_printing_line = ""
                 current_word = ""
                 continue
@@ -86,7 +78,6 @@ def bounded_text_formatter(message: tuple | str | list, boundaries: dict[str, in
             if len(current_printing_line) == max_line_letters:
                 # Create a new line.
                 printing_lines.append(current_printing_line.strip())
-                max_line_letters = following_line_length
                 current_printing_line = ""
                 continue
 
@@ -99,7 +90,6 @@ def bounded_text_formatter(message: tuple | str | list, boundaries: dict[str, in
             if len(current_printing_line) == max_line_letters:
                 if not wrap_words or len(current_word) > max_line_letters:
                     printing_lines.append(current_printing_line.strip())
-                    max_line_letters = following_line_length
                     current_printing_line = char
                     current_word = char
                     continue
@@ -108,7 +98,6 @@ def bounded_text_formatter(message: tuple | str | list, boundaries: dict[str, in
                 current_printing_line.removesuffix(current_word)
 
                 printing_lines.append(current_printing_line.strip())
-                max_line_letters = following_line_length
                 current_word += char
                 current_printing_line = current_word
                 continue
@@ -122,10 +111,13 @@ def bounded_text_formatter(message: tuple | str | list, boundaries: dict[str, in
     # Do a bit of formatting (Centering text)
     if center_lines:
         for i, line in enumerate(printing_lines):
-            if len(line) < following_line_length:
-                if i == 0 and first_line_length < following_line_length:
-                    printing_lines[i] = line.center(first_line_length)
-                printing_lines[i] = line.center(following_line_length)
+            if len(line) < max_line_letters:
+                printing_lines[i] = line.center(max_line_letters)
+
+    # Add spaces to the end of lines that are too short.
+    for i, line in enumerate(printing_lines):
+        if len(line) < max_line_letters:
+            printing_lines[i] = line + " " * (max_line_letters - len(line))
 
     return printing_lines
 
@@ -151,8 +143,9 @@ def assemble_display_string(display_array: list[list[list[str | list[str]]]]) ->
     return "\n".join(string_array)
 
 
-def to_char_array(string: str, mods: list[str] | None = None,
-                  boundaries: dict[str, int] | None = None) -> list[list[list[str | list[str]]]]:
+def to_char_array(string: str, boundaries: tuple[int, int], mods: list[str] | None = None,
+                  wrap_words: bool = True, center_lines: bool = False,
+                  cutoff_ending: str = "...") -> list[list[list[str | list[str]]]]:
     """Convert a string to the format used by the stuff_to_add class.
 
     Args:
@@ -161,19 +154,46 @@ def to_char_array(string: str, mods: list[str] | None = None,
         mods (list[str] | None, optional):
             The list of modifications to apply to the string.
             Defaults to [].
-        boundaries (dict[str, int] | None, optional):
-            The boundaries of the text, inclusive.
-            Defaults to {"top": 0, "bottom": 10, "left": 0, "right": 100}.
+        boundaries (tuple[int, int]):
+            The boundaries of the text, (y, x).
+        wrap_words (bool, optional):
+            Determines if words should be wrapped intact if possible or not.
+            Defaults to True.
+        center_lines (bool, optional):
+            Determines if the lines should be centered in the boundaries.
+            Defaults to False.
+        cutoff_ending (str, optional):
+            The ending to append to the message if it is cut off.
+            Defaults to "...".
 
     Returns:
         list[list[list[str | list[str]]]: The converted fancy char array int the FNGR (Fancy New Generation Rendering) format.
     """
     if mods is None:
         mods = []
-    if boundaries is None:
-        boundaries = {"top": 0, "bottom": 10, "left": 0, "right": 100}
 
-    string_array = bounded_text_formatter(string, boundaries, "", "", True, False, "")
+    string_array = bounded_text_formatter(string, boundaries, "", "", wrap_words, center_lines, cutoff_ending)
     char_array = [[[letter, mods] for letter in row] for row in string_array]
 
     return char_array
+
+
+def apply_color_scheme(color_scheme: list[str] | None, grid_text: list[list[list[str | list[str]]]]) -> list[list[list[str | list[str]]]]:
+    """Apply the color scheme to the text.
+
+    Args:
+        color_scheme (list[str] | None):
+            The color mods to apply.
+        grid_text (list[list[list[str | list[str]]]]):
+            The text to apply the color scheme to.
+
+    Returns:
+        list[list[list[str | list[str]]]]: The text with the color scheme applied.
+    """
+    if color_scheme is None:
+        color_scheme = []
+
+    for y, row in enumerate(grid_text):
+        for x, column in enumerate(row):
+            grid_text[y][x][1] = color_scheme + grid_text[y][x][1]
+    return grid_text

@@ -372,7 +372,7 @@ class Cursor:
     #             current_printing_line = current_printing_line[:max_line_letters - len(cutoff_ending)] + cutoff_ending
     #             printing_lines.append(current_printing_line)
     #             break
-    #         # Checks to see if a color code was found.
+    #         # Checks to see if a color_scheme code was found.
     #         if not coloring:
     #             # Check for special characters.
     #
@@ -401,7 +401,7 @@ class Cursor:
     #                 current_printing_line += " " * 4
     #                 current_word = ""
     #                 continue
-    #             # If a color code is found, it sets the coloring flag to True.
+    #             # If a color_scheme code is found, it sets the coloring flag to True.
     #             if char == "\033":
     #                 coloring = True
     #                 continue
@@ -445,7 +445,7 @@ class Cursor:
     #                 current_printing_line += char
     #                 current_word += char
     #                 continue
-    #         # If a color code was found, it checks for the end of the code.
+    #         # If a color_scheme code was found, it checks for the end of the code.
     #         else:
     #             if char == "m":
     #                 coloring = False
@@ -507,7 +507,7 @@ class Cursor:
     #     # Cleans up and optionally waits at the end.
     #     sleep(line_delay * speed)
     #     if not mods is None:
-    #         print(color.END, end="")
+    #         print(color_scheme.END, end="")
     #     print(end=end)
 
 
@@ -526,17 +526,17 @@ if __name__ == "__main__":
     # # cursor._ending()
     # print("Pizza")
     # print(len(""))
-    # print(len(color.BLUE))
-    # print(color.BLUE)
-    # print(len(f"{color.BLUE}"))
-    # print(f"{color.RED}red{color.BLUE}blue{color.BRIGHT_WHITE}bright_white{color.END}end")
+    # print(len(color_scheme.BLUE))
+    # print(color_scheme.BLUE)
+    # print(len(f"{color_scheme.BLUE}"))
+    # print(f"{color_scheme.RED}red{color_scheme.BLUE}blue{color_scheme.BRIGHT_WHITE}bright_white{color_scheme.END}end")
     # print(f"""
-    # {color.BLACK}black
-    # {color.BRIGHT_BLACK}bright_black
-    # {color.WHITE}white
-    # {color.DEFAULT_COLOR}default
-    # {color.BRIGHT_WHITE}bright_white""")
+    # {color_scheme.BLACK}black
+    # {color_scheme.BRIGHT_BLACK}bright_black
+    # {color_scheme.WHITE}white
+    # {color_scheme.DEFAULT_COLOR}default
+    # {color_scheme.BRIGHT_WHITE}bright_white""")
     # print(len("\n"))
-    # for letter in color.BLUE:
+    # for letter in color_scheme.BLUE:
     #     print(letter, end=" ")
     # print()

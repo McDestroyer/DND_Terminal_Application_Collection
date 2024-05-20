@@ -85,7 +85,7 @@ END = '\033[0m'
 
 
 def custom(code: int, back: bool = False) -> str:
-    """Give a text or background modification color code based off of a specific escape code.
+    """Give a text or background modification color_scheme code based off of a specific escape code.
 
     Args:
         code (int): The code of the desired modification.
@@ -100,7 +100,7 @@ def custom(code: int, back: bool = False) -> str:
 
 
 def rgb(red: int = 0, green: int = 0, blue: int = 0, back: bool = False) -> str:
-    """Give a text or background modification color code based off of a decimal RGB input.
+    """Give a text or background modification color_scheme code based off of a decimal RGB input.
 
     Args:
         red (int, optional):
@@ -124,7 +124,7 @@ def rgb(red: int = 0, green: int = 0, blue: int = 0, back: bool = False) -> str:
 
 
 def rgb_hex(red: str = 0, green: str = 0, blue: str = 0, back: bool = False) -> str:
-    """Give a text or background modification color code based off of a hex RGB input.
+    """Give a text or background modification color_scheme code based off of a hex RGB input.
 
     Args:
         red (str, optional):

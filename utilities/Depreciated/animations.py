@@ -87,16 +87,16 @@ def loading_v3(loading_time: int = 5, message: str = "Loading:",
             The length of the bar.
             Defaults to 50.
         message_mods (list | None, optional):
-            The color mods for the message text.
+            The color_scheme mods for the message text.
             Defaults to None.
         bar_mods (list | None, optional):
-            The color mods for the bar.
+            The color_scheme mods for the bar.
             Defaults to None.
         percent_mods (list | None, optional):
-            The color mods for the percentage.
+            The color_scheme mods for the percentage.
             Defaults to None.
         container_mods (list | None, optional):
-            The color mods for the bar container.
+            The color_scheme mods for the bar container.
             Defaults to None.
         empty_symbol (str, optional):
             The symbol used to represent the unloaded part of the bar.
