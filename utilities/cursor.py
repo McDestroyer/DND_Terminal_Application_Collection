@@ -15,17 +15,17 @@
     clear_screen_before(): Clear the screen before the cursor.
     clear_screen(): Clear the entire screen.
 
-    replace_current(): Identical to clear_line() but with a different name.
+    replace_current(): Identical to clear_line() but with a different _name.
     replace_previous(): Move the curser to the previous line and clears it to allow overwriting.
 
     save(): Save the current position of the cursor. Can be loaded again using load().
     load(): Load the previously saved cursor position. Position can be saved with save().
     get_saved_pos(): Get the saved cursor position.
 
-    set_pos(): Set the position of the cursor to specific coordinates.
+    set_pos(): Set the position of the cursor to specific _coordinates.
     get_pos(): Get the current position of the cursor.
 
-    cursor_print(): Print text at the current cursor position.
+    cursor_print(): Print _text at the current cursor position.
 """
 
 import color
@@ -121,7 +121,7 @@ class Cursor:
 
     def clear_line_before(self) -> None:
         """Clear the current line before the cursor.
-        Effectively replaces the preceding text with blank spaces."""
+        Effectively replaces the preceding _text with blank spaces."""
         print("\033[1K", end="")
 
     def clear_line(self) -> None:
@@ -129,7 +129,7 @@ class Cursor:
         print("\033[2K", end="")
         self.cursor_pos[0] = 0
 
-    # Clearing screens
+    # Clearing _screens
 
     def clear_screen_after(self) -> None:
         """Clear the screen after the cursor."""
@@ -144,7 +144,7 @@ class Cursor:
         print("\033[2J", end="")
         self.set_pos()
 
-    # Prep to replace previous text
+    # Prep to replace previous _text
 
     def replace_current(self) -> None:
         """Alternative wording to clear_line(). Literally just calls that function.
@@ -179,7 +179,7 @@ class Cursor:
     # Set cursor position
 
     def set_pos(self, column: int = 0, line: int = 0) -> None:
-        """Set the position of the cursor to specific coordinates.
+        """Set the position of the cursor to specific _coordinates.
 
         Args:
             column (int, optional):
@@ -204,7 +204,7 @@ class Cursor:
         self.hidden = True
 
     def show(self) -> None:
-        """Makes the cursor visible. Inverse of hide()."""
+        """Makes the cursor _visible. Inverse of hide()."""
         print("\033[?25h")
         self.hidden = False
 
@@ -232,7 +232,7 @@ class Cursor:
                      end: str = "", mods: list = None, flush: bool = True, boundaries: dict[str, int] = None,
                      move_to_start: bool = False, wrap_words: bool = True, center_lines: bool = False,
                      cutoff_ending: str | None = "...", ) -> None:
-        """Print text at the current cursor position and track it. Please do not include any 0-width characters outside
+        """Print _text at the current cursor position and track it. Please do not include any 0-width characters outside
         escape sequences as this will mess with the cursor tracking, and don't use \\r or \\b as I couldn't be bothered
         to make it work properly.
 
@@ -256,10 +256,10 @@ class Cursor:
                 List of modifiers from the colorizer class to apply to the message.
                 Defaults to [].
             flush (bool, optional):
-                Determines if the text is output immediately or not.
+                Determines if the _text is output immediately or not.
                 Defaults to True.
             boundaries (list[int], optional):
-                The boundaries of the text, inclusive. Used to check if the text will go off the screen,
+                The boundaries of the _text, inclusive. Used to check if the _text will go off the screen,
                 and if so, move the cursor to the next line.
                 Defaults to {left: 0, right: screen_width, top: cursor_pos[1], bottom: screen_height}.
             move_to_start (bool, optional):
@@ -273,11 +273,11 @@ class Cursor:
                 Defaults to False.
             cutoff_ending (str | None, optional):
                 Determines what should be appended to the message if it is cut off. If None, an error is raised upon
-                the text being cut-off.
+                the _text being cut-off.
                 Defaults to "...".
 
         Returns:
-            False if the text cannot fit on the screen, True otherwise.
+            False if the _text cannot fit on the screen, True otherwise.
         """
         # Calculate lines required
         if boundaries is None:
@@ -332,7 +332,7 @@ class Cursor:
     #         message (tuple):
     #             The message to wrap.
     #         boundaries (dict[str, int]):
-    #             The boundaries of the text, inclusive.
+    #             The boundaries of the _text, inclusive.
     #         sep (str):
     #             The separator between each item in the message.
     #         end (str):
@@ -372,7 +372,7 @@ class Cursor:
     #             current_printing_line = current_printing_line[:max_line_letters - len(cutoff_ending)] + cutoff_ending
     #             printing_lines.append(current_printing_line)
     #             break
-    #         # Checks to see if a color_scheme code was found.
+    #         # Checks to see if a _color_scheme code was found.
     #         if not coloring:
     #             # Check for special characters.
     #
@@ -401,7 +401,7 @@ class Cursor:
     #                 current_printing_line += " " * 4
     #                 current_word = ""
     #                 continue
-    #             # If a color_scheme code is found, it sets the coloring flag to True.
+    #             # If a _color_scheme code is found, it sets the coloring flag to True.
     #             if char == "\033":
     #                 coloring = True
     #                 continue
@@ -445,13 +445,13 @@ class Cursor:
     #                 current_printing_line += char
     #                 current_word += char
     #                 continue
-    #         # If a color_scheme code was found, it checks for the end of the code.
+    #         # If a _color_scheme code was found, it checks for the end of the code.
     #         else:
     #             if char == "m":
     #                 coloring = False
     #             continue
     #
-    #     # Do a bit of formatting (Centering text)
+    #     # Do a bit of formatting (Centering _text)
     #     if center_lines:
     #         for i, line in enumerate(printing_lines):
     #             if len(line) < following_line_length:
@@ -461,7 +461,7 @@ class Cursor:
     #
     #     return printing_lines
 
-    # def text(*message: object, letter_time: float = .025, line_delay: float = 0,
+    # def _text(*message: object, letter_time: float = .025, line_delay: float = 0,
     #          sep: str = " ", end: str = "\n", mods: list = None, flush: bool = True) -> None:
     #     """Mimic print() but with more functionality and a default time delay.
     #
@@ -507,7 +507,7 @@ class Cursor:
     #     # Cleans up and optionally waits at the end.
     #     sleep(line_delay * speed)
     #     if not mods is None:
-    #         print(color_scheme.END, end="")
+    #         print(_color_scheme.END, end="")
     #     print(end=end)
 
 
@@ -526,17 +526,17 @@ if __name__ == "__main__":
     # # cursor._ending()
     # print("Pizza")
     # print(len(""))
-    # print(len(color_scheme.BLUE))
-    # print(color_scheme.BLUE)
-    # print(len(f"{color_scheme.BLUE}"))
-    # print(f"{color_scheme.RED}red{color_scheme.BLUE}blue{color_scheme.BRIGHT_WHITE}bright_white{color_scheme.END}end")
+    # print(len(_color_scheme.BLUE))
+    # print(_color_scheme.BLUE)
+    # print(len(f"{_color_scheme.BLUE}"))
+    # print(f"{_color_scheme.RED}red{_color_scheme.BLUE}blue{_color_scheme.BRIGHT_WHITE}bright_white{_color_scheme.END}end")
     # print(f"""
-    # {color_scheme.BLACK}black
-    # {color_scheme.BRIGHT_BLACK}bright_black
-    # {color_scheme.WHITE}white
-    # {color_scheme.DEFAULT_COLOR}default
-    # {color_scheme.BRIGHT_WHITE}bright_white""")
+    # {_color_scheme.BLACK}black
+    # {_color_scheme.BRIGHT_BLACK}bright_black
+    # {_color_scheme.WHITE}white
+    # {_color_scheme.DEFAULT_COLOR}default
+    # {_color_scheme.BRIGHT_WHITE}bright_white""")
     # print(len("\n"))
-    # for letter in color_scheme.BLUE:
+    # for letter in _color_scheme.BLUE:
     #     print(letter, end=" ")
     # print()

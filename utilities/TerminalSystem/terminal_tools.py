@@ -5,7 +5,7 @@ def bounded_text_formatter(message: tuple | str | list, size: tuple[int, int], s
                            wrap_words: bool, center_lines: bool, cutoff_ending: str | None) -> list[str]:
     """Wrap the message to fit within the boundaries and convert it to the grid_to_add format.
 
-    WARNING: Do not use this function to wrap text that contains color_scheme codes or some other special characters.
+    WARNING: Do not use this function to wrap text that contains color scheme codes or some other special characters.
 
     Args:
         message (tuple | str | list):
@@ -28,7 +28,7 @@ def bounded_text_formatter(message: tuple | str | list, size: tuple[int, int], s
     """
 
     max_line_letters = size[1]
-    max_following_lines = size[0] - 1
+    max_lines = size[0]
 
     full_message = sep.join(message) + end
 
@@ -38,9 +38,8 @@ def bounded_text_formatter(message: tuple | str | list, size: tuple[int, int], s
 
     for char in full_message:
         # Check if the message is too long and kill if so.
-        if len(current_printing_line) >= max_line_letters and len(printing_lines) >= max_following_lines:
+        if len(current_printing_line) >= max_line_letters and len(printing_lines) >= max_lines - 1:
             current_printing_line = current_printing_line[:max_line_letters - len(cutoff_ending)] + cutoff_ending
-            printing_lines.append(current_printing_line)
             break
 
         # Check for special characters.
@@ -75,7 +74,7 @@ def bounded_text_formatter(message: tuple | str | list, size: tuple[int, int], s
 
             # If the space would otherwise go over the line length,
             # cut it off at the end of the line and ignore it.
-            if len(current_printing_line) == max_line_letters:
+            if len(current_printing_line) >= max_line_letters:
                 # Create a new line.
                 printing_lines.append(current_printing_line.strip())
                 current_printing_line = ""
@@ -87,8 +86,8 @@ def bounded_text_formatter(message: tuple | str | list, size: tuple[int, int], s
         # If a regular character is found, it adds it to the current line and word.
         else:
             # If the line is full, it creates a new line with the current word or letter.
-            if len(current_printing_line) == max_line_letters:
-                if not wrap_words or len(current_word) > max_line_letters:
+            if len(current_printing_line) >= max_line_letters:
+                if not wrap_words or len(current_word) >= max_line_letters:
                     printing_lines.append(current_printing_line.strip())
                     current_printing_line = char
                     current_word = char
@@ -108,7 +107,7 @@ def bounded_text_formatter(message: tuple | str | list, size: tuple[int, int], s
 
     printing_lines.append(current_printing_line.strip())
 
-    # Do a bit of formatting (Centering text)
+    # Do a bit of formatting (Centering _text)
     if center_lines:
         for i, line in enumerate(printing_lines):
             if len(line) < max_line_letters:
@@ -123,15 +122,15 @@ def bounded_text_formatter(message: tuple | str | list, size: tuple[int, int], s
 
 
 def assemble_display_string(display_array: list[list[list[str | list[str]]]]) -> str:
-    """Assemble the display string from the display array.
-    Used for printing the final step before printing the display array.
+    """Assemble the _display string from the _display array.
+    Used for printing the final step before printing the _display array.
 
     Args:
-        display_array (list[list[list[str | list[str]]]):
-            The display array to convert to a string.
+        display_array (list[list[list[str | list[str]]]]):
+            The _display array to convert to a string.
 
     Returns:
-        str: The display string ready to be printed.
+        str: The _display string ready to be printed.
     """
     string_array = []
     for row in display_array:
@@ -155,7 +154,7 @@ def to_char_array(string: str, boundaries: tuple[int, int], mods: list[str] | No
             The list of modifications to apply to the string.
             Defaults to [].
         boundaries (tuple[int, int]):
-            The boundaries of the text, (y, x).
+            The boundaries of the _text, (y, x).
         wrap_words (bool, optional):
             Determines if words should be wrapped intact if possible or not.
             Defaults to True.
@@ -167,7 +166,8 @@ def to_char_array(string: str, boundaries: tuple[int, int], mods: list[str] | No
             Defaults to "...".
 
     Returns:
-        list[list[list[str | list[str]]]: The converted fancy char array int the FNGR (Fancy New Generation Rendering) format.
+        list[list[list[str | list[str]]]: The converted fancy char array int the FNGR (Fancy New Generation Rendering)
+        format.
     """
     if mods is None:
         mods = []
@@ -178,17 +178,18 @@ def to_char_array(string: str, boundaries: tuple[int, int], mods: list[str] | No
     return char_array
 
 
-def apply_color_scheme(color_scheme: list[str] | None, grid_text: list[list[list[str | list[str]]]]) -> list[list[list[str | list[str]]]]:
-    """Apply the color scheme to the text.
+def apply_color_scheme(color_scheme: list[str] | None,
+                       grid_text: list[list[list[str | list[str]]]]) -> list[list[list[str | list[str]]]]:
+    """Apply the color scheme to the _text.
 
     Args:
         color_scheme (list[str] | None):
             The color mods to apply.
         grid_text (list[list[list[str | list[str]]]]):
-            The text to apply the color scheme to.
+            The _text to apply the color scheme to.
 
     Returns:
-        list[list[list[str | list[str]]]]: The text with the color scheme applied.
+        list[list[list[str | list[str]]]]: The _text with the color scheme applied.
     """
     if color_scheme is None:
         color_scheme = []

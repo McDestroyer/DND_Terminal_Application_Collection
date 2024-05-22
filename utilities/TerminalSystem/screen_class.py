@@ -1,30 +1,37 @@
 import pickle
 
 import color
-from terminal_objects import *
+
+from base_terminal_object import PrintableObject
 
 
 class Screen:
 
     def __init__(self, screen_name: str, screen_size: tuple[int, int]) -> None:
-        self.screen_name = screen_name
-        self.screen_objects = []
-        self.screen_size = screen_size
-        self.display_array = [[[" ", [color.BACKGROUND_BLACK]] for _ in range(self.screen_size[1])] for _ in range(self.screen_size[0])]
-        self.should_refresh = True
+        self._name = screen_name
+        self._objects = []
+        self._screen_size = screen_size
+        self._display_array = [
+            [
+                [
+                    " ", [color.BACKGROUND_BLACK]
+                ] for _ in range(self._screen_size[1])
+            ] for _ in range(self._screen_size[0])
+        ]
+        self._should_refresh = True
 
-    def add_object(self, screen_object: TerminalObject) -> None:
+    def add_object(self, screen_object: PrintableObject) -> None:
         """Add an object to this screen.
 
         Args:
-            screen_object (TerminalObject):
+            screen_object (PrintableObject):
                 The object to add.
         """
-        self.screen_objects.append(screen_object)
-        self.screen_objects.sort(key=lambda x: x.get_z_index())
+        self._objects.append(screen_object)
+        self._objects.sort(key=lambda x: x.z_index)
         if screen_object.visible:
             self.update_display()
-            self.should_refresh = True
+            self._should_refresh = True
 
     def remove_object(self, object_name: str) -> None:
         """Remove an object from this screen.
@@ -33,11 +40,28 @@ class Screen:
             object_name (str):
                 The name of the object to remove.
         """
-        screen_object = [screen_object for screen_object in self.screen_objects if screen_object.get_name() == object_name][0]
-        self.screen_objects = [screen_object for screen_object in self.screen_objects if screen_object.get_name() != object_name]
-        if screen_object.visible:
-            self.update_display()
-            self.should_refresh = True
+        screen_object = self.get_object_by_name(object_name)
+        if screen_object is not None:
+            self._objects.remove(screen_object)
+
+            if screen_object.visible:
+                self.update_display()
+                self._should_refresh = True
+
+    def get_object_by_name(self, object_name: str) -> PrintableObject | None:
+        """Return an object on this screen by grabbing the first object by whatever name is given.
+
+        Args:
+            object_name (str):
+                The name of the object to return.
+
+        Returns:
+            PrintableObject | None: The object with the given name, or None if no object has that name.
+        """
+        for screen_object in self._objects:
+            if screen_object.name == object_name:
+                return screen_object
+        return None
 
     def load_object_from_file(self, object_name: str, file_path: str) -> None:
         """Load an object from a file and add it to this screen.
@@ -51,7 +75,7 @@ class Screen:
         with open(file_path, "rb") as file:
             obj = pickle.load(file)
         obj.set_name(object_name)
-        obj.should_refresh()
+        obj.should_refresh = True
         self.add_object(obj)
 
     def save_object_to_file(self, object_name: str, file_path: str) -> None:
@@ -63,92 +87,174 @@ class Screen:
             file_path (str):
                 The path to the file.
         """
-        for screen_object in self.screen_objects:
+        for screen_object in self._objects:
             if screen_object.get_name() == object_name:
                 with open(file_path, "wb") as file:
                     pickle.dump(screen_object, file)
 
-    def get_objects(self) -> list[TerminalObject]:
-        """Return the objects on this screen.
+    def update_display(self) -> list[list[list[str | list[str]]]]:
+        """Update the screen _display array with the _contents of the screen objects and return it.
 
         Returns:
-            list[TerminalObject]: A list of the objects on this screen.
+            list[list[list[str | list[str]]]]: The updated _display array.
         """
-        return self.screen_objects
+        self.clear_display()
 
-    def get_name(self) -> str:
-        return self.screen_name
+        for screen_object in self._objects:
+            if screen_object.visible:
+                self.add_to_display(screen_object.contents, screen_object.coordinates)
+                screen_object.should_refresh = False
 
-    def get_display(self) -> list[list[list[str | list[str]]]]:
-        return self.display_array
+        self._should_refresh = False
 
+        return self._display_array
+
+    def clear_display(self) -> None:
+        """Clear the _display array of all symbols."""
+        self._display_array = [
+            [
+                [
+                    " ", [color.BACKGROUND_BLACK]
+                ] for _ in range(self._screen_size[1])
+            ] for _ in range(self._screen_size[0])
+        ]
+
+    def add_to_display(self, grid_to_add: list[list[list[str | list[str]]]],
+                       coordinates: list[int] | tuple[int, int]) -> None:
+        """Add stuff to the _display.
+
+        Args:
+            grid_to_add (list[list[list[str | list[str]]]]):
+                The grid of characters to add to the _display.
+            coordinates (list[int] | tuple[int, int]):
+                The coordinates of the top-left slot to add the grid from.
+        """
+        # if (_coordinates[0] + len(grid_to_add) > len(self._display_array)-1 or
+        #         _coordinates[1] + len(grid_to_add[0]) > len(self._display_array[0])-1):
+        #     raise IndexError("Coordinates out of bounds.")
+
+        # Go through the grid and add the characters to the _display in a position offset by the _coordinates given.
+        for y, row in enumerate(grid_to_add):
+            if y + coordinates[0] > len(self._display_array) - 1:
+                break
+            elif y + coordinates[0] < 0:
+                continue
+            for x, column in enumerate(row):
+                if x + coordinates[1] > len(self._display_array[0]) - 1:
+                    break
+                elif x + coordinates[1] < 0:
+                    continue
+                if column[0] != "":
+                    self._display_array[y + coordinates[0]][x + coordinates[1]] = column
+
+    def __str__(self):
+        return self._name
+
+    def __repr__(self):
+        return self._name
+
+    def __eq__(self, other):
+        return self._objects == other.screen_objects
+
+    def __ne__(self, other):
+        return not self == other
+
+    @property
+    def name(self) -> str:
+        """Return the name of the screen.
+
+        Returns:
+            The name of the screen.
+        """
+        return self._name
+
+    @property
+    def objects(self) -> list[PrintableObject]:
+        """Return the objects on the screen.
+
+        Returns:
+            list[PrintableObject]: The objects on the screen.
+        """
+        return self._objects
+
+    @property
+    def screen_size(self) -> tuple[int, int]:
+        """Return the size of the screen.
+
+        Returns:
+            tuple[int, int]: The size of the screen.
+        """
+        return self._screen_size
+
+    @property
+    def display_array(self) -> list[list[list[str | list[str]]]]:
+        """Return the _display array.
+
+        Returns:
+            list[list[list[str | list[str]]]]: The _display array.
+        """
+        return self._display_array
+
+    @property
     def should_refresh(self) -> bool:
         """Return whether the screen should be refreshed.
 
         Returns:
             bool: True if an object on the screen or the screen itself says it should be refreshed, False otherwise.
         """
-        if self.should_refresh:
+        if self._should_refresh:
             return True
-        for screen_object in self.screen_objects:
-            if screen_object.should_refresh():
+        for screen_object in self._objects:
+            if screen_object.should_refresh:
                 return True
         return False
 
-    def update_display(self) -> list[list[list[str | list[str]]]]:
-        """Update the screen display array with the contents of the screen objects and return it.
-
-        Returns:
-            list[list[list[str | list[str]]]]: The updated display array.
-        """
-        self.clear_display()
-
-        for screen_object in self.screen_objects:
-            if screen_object.visible:
-                self.add_to_display(screen_object.get_contents(), screen_object.get_coordinates())
-                screen_object.refreshed()
-
-        self.should_refresh = False
-
-        return self.display_array
-
-    def clear_display(self) -> None:
-        """Clear the display array of all symbols."""
-        self.display_array = [[[" ", [color.BACKGROUND_BLACK]] for _ in range(self.screen_size[1])] for _ in range(self.screen_size[0])]
-
-    def add_to_display(self, grid_to_add: list[list[list[str | list[str]]]],
-                       coordinates: list[int] | tuple[int, int]) -> None:
-        """Add stuff to the display.
+    @name.setter
+    def name(self, new_name: str) -> None:
+        """Set the name of the screen.
 
         Args:
-            grid_to_add (list[list[list[str | list[str]]]):
-                The grid of characters to add to the display.
-            coordinates (list[int] | tuple[int, int]):
-                The coordinates of the top-left slot to add the grid from.
+            new_name (str):
+                The new name of the screen.
         """
-        if (coordinates[0] + len(grid_to_add) > len(self.display_array)-1 or
-                coordinates[1] + len(grid_to_add[0]) > len(self.display_array[0])-1):
-            raise IndexError("Coordinates out of bounds.")
+        self._name = new_name
 
-        # Go through the grid and add the characters to the display in a position offset by the coordinates given.
-        for y, row in enumerate(grid_to_add):
-            for x, column in enumerate(row):
-                if column[0] != "":
-                    self.display_array[y + coordinates[0]][x + coordinates[1]] = column
+    @objects.setter
+    def objects(self, new_objects: list[PrintableObject]) -> None:
+        """Set the objects on the screen.
 
-    def __str__(self):
-        return self.screen_name
+        Args:
+            new_objects (list[PrintableObject]):
+                The new objects on the screen.
+        """
+        self._objects = new_objects
 
-    def __repr__(self):
-        return self.screen_name
+    @screen_size.setter
+    def screen_size(self, new_screen_size: tuple[int, int]) -> None:
+        """Set the size of the screen.
 
-    def __eq__(self, other):
-        return self.screen_objects == other.screen_objects
+        Args:
+            new_screen_size (tuple[int, int]):
+                The new size of the screen.
+        """
+        self._screen_size = new_screen_size
 
-    def __ne__(self, other):
-        return not self == other
+    @display_array.setter
+    def display_array(self, new_display_array: list[list[list[str | list[str]]]]) -> None:
+        """Set the _display array.
 
-    def refresh_display_objects(self):
-        for screen_object in self.screen_objects:
-            screen_object.get_contents()
+        Args:
+            new_display_array (list[list[list[str | list[str]]]]):
+                The new _display array.
+        """
+        self._display_array = new_display_array
 
+    @should_refresh.setter
+    def should_refresh(self, new_should_refresh: bool) -> None:
+        """Set whether the screen should be refreshed.
+
+        Args:
+            new_should_refresh (bool):
+                True if the screen should be refreshed, False otherwise.
+        """
+        self._should_refresh = new_should_refresh

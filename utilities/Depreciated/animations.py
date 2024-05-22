@@ -25,7 +25,7 @@ from personal_functions import *
 # def loading1(time: int = 5, message: str = "Loading:", container: str = "[ ]", length: int = 50,
 #              text_colors: list | None = None, empty_symbol: str = "-", loaded_symbol: str = "#"):
 
-#     text(message, container.split()[0], empty_symbol * length,
+#     _text(message, container.split()[0], empty_symbol * length,
 #          container.split()[1], mods=text_colors)
 
 #     beginning = message + " " + container.split()[0]
@@ -35,7 +35,7 @@ from personal_functions import *
 #     for i in range(length + 1):
 #         sleep(delta)
 #         cursor.replace_previous()
-#         text(beginning, (loaded_symbol * i) + (empty_symbol * (length - i)), ending,
+#         _text(beginning, (loaded_symbol * i) + (empty_symbol * (length - i)), ending,
 #              letter_time=0, mods=text_colors)
 
 
@@ -49,10 +49,10 @@ from personal_functions import *
 #     ending = container.split()[1]
 #     delta = time / length
 
-#     text(message, mods=message_mods, end=" ")
-#     text(beginning, mods=container_mods, end=" ")
-#     text((empty_symbol * length), mods=bar_mods, end=" ")
-#     text(ending, mods=container_mods, end="")
+#     _text(message, mods=message_mods, end=" ")
+#     _text(beginning, mods=container_mods, end=" ")
+#     _text((empty_symbol * length), mods=bar_mods, end=" ")
+#     _text(ending, mods=container_mods, end="")
 
 #     cursor.hide()
 #     cursor.cursor_up()
@@ -61,7 +61,7 @@ from personal_functions import *
 
 #     for _ in range(length):
 #         sleep(delta)
-#         text(loaded_symbol, letter_time=0, mods=bar_mods, end="")
+#         _text(loaded_symbol, letter_time=0, mods=bar_mods, end="")
 
 #     cursor.show()
 
@@ -87,16 +87,16 @@ def loading_v3(loading_time: int = 5, message: str = "Loading:",
             The length of the bar.
             Defaults to 50.
         message_mods (list | None, optional):
-            The color_scheme mods for the message text.
+            The _color_scheme mods for the message _text.
             Defaults to None.
         bar_mods (list | None, optional):
-            The color_scheme mods for the bar.
+            The _color_scheme mods for the bar.
             Defaults to None.
         percent_mods (list | None, optional):
-            The color_scheme mods for the percentage.
+            The _color_scheme mods for the percentage.
             Defaults to None.
         container_mods (list | None, optional):
-            The color_scheme mods for the bar container.
+            The _color_scheme mods for the bar container.
             Defaults to None.
         empty_symbol (str, optional):
             The symbol used to represent the unloaded part of the bar.
@@ -156,11 +156,11 @@ def loading_v3(loading_time: int = 5, message: str = "Loading:",
 
 def drop_down(image: list, colors: dict, drop_time: int = 5,
               bottom_y: int = 20, symbol: str | None = None) -> None:
-    """Drop down a text-art image from the top of the screen.
+    """Drop down a _text-art image from the top of the screen.
 
     Args:
         image (list):
-            The list of lines of text to print.
+            The list of lines of _text to print.
         colors (dict):
             The dictionary of the colors to make each of the symbols in the image.
         time (int, optional):

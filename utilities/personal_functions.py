@@ -1,7 +1,7 @@
 """A collection of personal functions to call.
 
-    text(): print() alternative.
-    intext(): input() alternative using text().
+    _text(): print() alternative.
+    intext(): input() alternative using _text().
     intput(): Integer-specific, error-catching input() alternative using intext().
     floatput(): Float-specific, error-catching input() alternative using intext().
     boolput(): Boolean-specific, error-catching input() alternative using intext().
@@ -56,7 +56,7 @@ def text(*message: object, letter_time: float = .025, line_delay: float = 0,
             List of modifiers from the colorizer class to apply to the message.
             Defaults to [].
         flush (bool, optional):
-            Determines if the text is output immediately or not.
+            Determines if the _text is output immediately or not.
             Defaults to True.
     """
     # Having a function have a default list is "dangerous" so this serves as an equivalent if None.
@@ -104,7 +104,7 @@ def text(*message: object, letter_time: float = .025, line_delay: float = 0,
 
 def color_print(*message: object, sep: str = " ", end: str = "\n",
                 mods: list = None, flush: bool = True) -> None:
-    """Mimic print() but with color_scheme.
+    """Mimic print() but with _color_scheme.
 
     Args:
         *message (str, optional):
@@ -120,7 +120,7 @@ def color_print(*message: object, sep: str = " ", end: str = "\n",
             List of modifiers from the colorizer class to apply to the message.
             Defaults to [].
         flush (bool, optional):
-            Determines if the text is output immediately or not.
+            Determines if the _text is output immediately or not.
             Defaults to True.
     """
     # Having a function have a default list is "dangerous" so this serves as an equivalent if None.
@@ -153,7 +153,7 @@ def color_print(*message: object, sep: str = " ", end: str = "\n",
 
 def error(*message: object, letter_time: float = .025, line_delay: float = 0,
          sep: str = " ", end: str = "\n", flush: bool = True) -> None:
-    """Same as text but designed for error messages.
+    """Same as _text but designed for error messages.
 
     Args:
         *message (str, optional):
@@ -172,7 +172,7 @@ def error(*message: object, letter_time: float = .025, line_delay: float = 0,
             String appended after the last value.
             Defaults to "\\n".
         flush (bool, optional):
-            Determines if the text is output immediately or not.
+            Determines if the _text is output immediately or not.
             Defaults to True.
     """
     # Having a function have a default list is "dangerous" so this serves as an equivalent if None.
@@ -218,7 +218,7 @@ def error(*message: object, letter_time: float = .025, line_delay: float = 0,
 
 def intext(*message: object, letter_time: float = .025, line_delay: float = 0,
            sep: str = " ", end: str = " ", mods: list = None) -> str:
-    """Mimic input() but use text() instead of print() and add a space at the end for convenience.
+    """Mimic input() but use _text() instead of print() and add a space at the end for convenience.
 
     Args:
         *message (str, optional):
@@ -243,12 +243,12 @@ def intext(*message: object, letter_time: float = .025, line_delay: float = 0,
     Returns:
         str: The string value of the user's input.
     """
-    # See the equivalent in text().
+    # See the equivalent in _text().
     if len(message) == 1:
         if isinstance(message[0], (tuple, list)):
             message = message[0]
 
-    # Passes through the arguments to text() and returns the input.
+    # Passes through the arguments to _text() and returns the input.
     text(message, letter_time=letter_time, sep=sep,
          line_delay=line_delay, end=end, mods=mods)
     return input()
@@ -285,7 +285,7 @@ def intput(*message: object, letter_time: int = .025, line_delay: int = 0,
             Defaults to "That's not an integer. Please enter an integer:"
         fail_mods (str, optional):
             The message to give if the original input is invalid.
-            Defaults to [color_scheme.ERROR]
+            Defaults to [_color_scheme.ERROR]
 
     Returns:
         int: The integer value of the user's input.
@@ -342,7 +342,7 @@ def floatput(*message: str, sep: str = " ", letter_time: float = .025,
             "That's not a floating point value. Please enter a floating point value:"
         fail_mods (str, optional):
             The message to give if the original input is invalid. Defaults to
-            [color_scheme.ERROR]
+            [_color_scheme.ERROR]
 
     Returns:
         float: The floating point value of the user's input.
@@ -646,7 +646,7 @@ def factorial(num: int) -> int:
 
 
 def merge(message: list, sep: str = " ") -> str:
-    """Invert the split function. Merge lines of text into a string with a given seperator.
+    """Invert the split function. Merge lines of _text into a string with a given seperator.
 
     Args:
         message (list):

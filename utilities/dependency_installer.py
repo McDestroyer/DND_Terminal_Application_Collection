@@ -9,7 +9,7 @@ def install_dependency(dependency: str, silent: bool = False) -> bool:
 
     Args:
         dependency (str):
-            The name of the dependency to install.
+            The _name of the dependency to install.
         silent (bool, optional):
             Whether to print output.
             Defaults to False.
@@ -36,7 +36,7 @@ def _install_dependency_v1(dependency: str, silent: bool = False) -> bool:
 
     Args:
         dependency (str):
-            The name of the dependency to install.
+            The _name of the dependency to install.
         silent (bool, optional):
             Whether to print output.
             Defaults to False.

@@ -3,19 +3,19 @@
 
 def file_to_dict(file_path: str, splitter: str = "=", comment: str = "#",
                  end_read: str = "|", line_count: int = -1) -> dict | None:
-    """Convert the contents of a file into a dictionary of values.
+    """Convert the _contents of a file into a dictionary of values.
 
     Args:
         file_path (str):
             The path to the file you want to open.
         splitter (str, optional):
-            The character(s) that indicate the split between key and contents.
+            The character(s) that indicate the split between key and _contents.
             Defaults to "=".
         comment (str, optional):
             The character(s) used to start ignored comment lines in the file.
             Defaults to "#".
         end_read (str, optional):
-            The character(s) used to indicate that the text to be read stops here.
+            The character(s) used to indicate that the _text to be read stops here.
             Defaults to "|".
         line_count (int, optional):
             The number of lines to read if above 0, otherwise until the end. Includes comments.
@@ -57,7 +57,7 @@ def file_to_dict(file_path: str, splitter: str = "=", comment: str = "#",
 
 
 def file_to_list(path: str) -> list:
-    """Convert the contents of a file into a list of its lines.
+    """Convert the _contents of a file into a list of its lines.
 
     Args:
         path (str):
