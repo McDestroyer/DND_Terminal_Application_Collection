@@ -26,7 +26,7 @@ import time
 # pylint: disable=import-error
 
 import color
-import keyboard_input as keybd
+from inputs import keyboard_input as keybd
 
 
 # Input / Output

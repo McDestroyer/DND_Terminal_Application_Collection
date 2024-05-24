@@ -33,25 +33,35 @@ class WindowManager:
 
         self._color_scheme = self._default_color_scheme
 
-        self._keybinds: dict[str, callable] = {}
+        # self._keybinds: dict[str, callable] = {}
 
-    def add_screen(self, screen_name: str) -> None:
+    def add_screen(self, screen_name: str) -> Screen:
         """Add a screen to the WindowManager.
 
         Args:
             screen_name (str):
                 The name of the screen.
-        """
-        self._screens.append(Screen(screen_name, self._screen_size))
 
-    def remove_screen(self, screen_name: str) -> None:
+        Returns:
+            Screen: The screen.
+        """
+        screen = Screen(screen_name, self._screen_size)
+        self._screens.append(screen)
+        return screen
+
+    def remove_screen(self, screen_name: str) -> Screen:
         """Remove a screen from the WindowManager.
 
         Args:
             screen_name (str):
                 The name of the screen.
+
+        Returns:
+            Screen: The screen.
         """
-        self._screens.remove(self.get_screen_by_name(screen_name))
+        screen = self.get_screen_by_name(screen_name)
+        self._screens.remove(screen)
+        return screen
 
     def save_screen_to_file(self, screen_name: str, file_path: str) -> None:
         """Save a screen to a file.
@@ -96,15 +106,21 @@ class WindowManager:
                 return screen
         return None
 
-    def set_current_screen(self, screen_name: str) -> None:
-        """Set the current screen to the screen with the given name and update the display.
+    def set_current_screen(self, screen: str | Screen) -> Screen:
+        """Set the current screen to the given screen or the screen with the given name and update the display.
 
         Args:
-            screen_name (str):
-                The name of the screen.
+            screen (str | Screen):
+                The name of the screen or the screen itself.
+
+        Returns:
+            Screen: The screen.
         """
-        self._current_screen = self.get_screen_by_name(screen_name)
-        self.refresh_screen()
+        if isinstance(screen, Screen):
+            self._current_screen = screen
+        else:
+            self._current_screen = self.get_screen_by_name(screen)
+        return self._current_screen
 
     def refresh_screen(self) -> None:
         """Refresh the screen array and display it."""
@@ -118,15 +134,6 @@ class WindowManager:
             Display: The display.
         """
         return self._display
-
-    @property
-    def keybinds(self) -> dict[str, callable]:
-        """Return the keybinds.
-
-        Returns:
-            dict[str, callable]: The keybinds.
-        """
-        return self._keybinds
 
     @property
     def color_scheme(self) -> dict[str, list[str]]:
@@ -216,16 +223,16 @@ class WindowManager:
         self._color_scheme = new_color_scheme
         self.refresh_screen()
 
-    @keybinds.setter
-    def keybinds(self, new_keybinds: dict[str, callable]) -> None:
-        """Set the keybinds.
-
-        Args:
-            new_keybinds (dict[str, callable]):
-                The new keybinds.
-        """
-        self._keybinds = new_keybinds
-        self.refresh_screen()
+    # @keybinds.setter
+    # def keybinds(self, new_keybinds: dict[str, callable]) -> None:
+    #     """Set the keybinds.
+    #
+    #     Args:
+    #         new_keybinds (dict[str, callable]):
+    #             The new keybinds.
+    #     """
+    #     self._keybinds = new_keybinds
+    #     self.refresh_screen()
 
     @screens.setter
     def screens(self, new_screens: list[Screen]) -> None:

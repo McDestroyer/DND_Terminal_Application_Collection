@@ -139,3 +139,102 @@ class KeyboardInput:
             function()
 
         return result
+
+    def get_status(self, user_input: str) -> dict[str, float] | None:
+        """Get the status of an input.
+
+        Args:
+            user_input (str):
+                The input to check.
+
+        Returns:
+            dict[str, float] | None: The status of the input.
+                Keys are "pressed", "held", "released", "newly_pressed", and newly_released".
+                If the key is invalid, returns None.
+        """
+        status = {
+            "pressed": 0.0,
+            "held": 0.0,
+            "released": 0.0,
+            "newly_pressed": 0.0,
+            "newly_released": 0.0,
+        }
+
+        past_values = self.keys
+
+        # If the input is not in the list, return the empty status.
+        try:
+            val = keyboard.is_pressed(user_input)
+            if type(val) is bool:
+                if val:
+                    val = 1.0
+                else:
+                    val = 0.0
+        except ValueError:
+            return None
+
+        # If this input hasn't been checked before, set the values accordingly.
+        if user_input not in past_values.keys():
+            status["pressed"] = val
+            status["newly_released"] = 0.0
+            if val:
+                status["released"] = 0.0
+                status["newly_pressed"] = val
+                status["held"] = val
+            else:
+                status["released"] = 1.0
+                status["newly_pressed"] = 0.0
+                status["held"] = 0.0
+
+        # If the input has been checked before and is pressed, set the values accordingly.
+        elif val:
+            status["pressed"] = val
+            status["released"] = not val
+            status["newly_released"] = 0.0
+            if past_values[user_input][0]:
+                status["newly_pressed"] = 0.0
+                if time.time_ns() - past_values[user_input][1] > self.hold_delay * 1_000_000_000:
+                    status["held"] = val
+                else:
+                    status["held"] = 0.0
+            else:
+                status["newly_pressed"] = val
+                status["held"] = val
+
+        # If the input has been checked before and is not pressed, set the values accordingly.
+        else:
+            status["pressed"] = val
+            status["released"] = not val
+            status["newly_pressed"] = 0.0
+            status["held"] = 0.0
+            if past_values[user_input][0]:
+                status["newly_released"] = 1.0
+            else:
+                status["newly_released"] = 0.0
+
+        # Update the past values.
+        if status["released"] != 0.0:
+            self.keys[user_input] = [0.0, 0]
+        elif status["newly_pressed"] != 0.0:
+            self.keys[user_input] = [val, time.time_ns()]
+        elif status["pressed"] != 0.0:
+            self.keys[user_input][0] = val
+
+        return status
+
+
+if __name__ == "__main__":
+    kb = KeyboardInput()
+
+    while True:
+        # if kb.is_newly_pressed("a"):
+        #     print("a is newly pressed")
+        # if kb.is_currently_pressed("a"):
+        #     print("a is currently pressed")
+        # if kb.is_held("a"):
+        #     print("a is held")
+        # if kb.get_status("a")["held"]:
+        #     print(kb.get_status("a")["held"])
+        print(kb.get_status("a"))
+
+        time.sleep(0.1)

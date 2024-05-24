@@ -1,115 +1,125 @@
-# # These get rid of annoying errors that usually mean nothing.
-# # Remove non-import related ones if seriously struggling
-#
-# # pylint: disable=unused-import
-# # pylint: disable=unused-wildcard-import
-# # pylint: disable=wildcard-import
-# # pylint: disable=unexpected-keyword-arg
-# # pylint: disable=no-member
-# # pylint: disable=ungrouped-imports
-# # pylint: disable=undefined-variable
-# # pylint: disable=wrong-import-position
-# # pylint: disable=import-error
-#
-#
-# # This is an importer I made for all of my programs going forward, so I wouldn't have to deal with
-# # creating and renaming the utilities files for every program or have to deal with learning the "correct" methods.
-# import sys
-# import os
-#
-# import_directory = os.path.dirname(os.path.realpath(__file__))
-#
-# while "utilities" not in os.listdir(import_directory):
-#     import_directory = os.path.dirname(import_directory)
-#
-# import_directory = os.path.join(import_directory, "utilities")
-# sys.path.append(import_directory)
-#
-# # Optionally add if you want to use the terminal system.
-# import_directory = os.path.join(import_directory, "TerminalSystem")
-# sys.path.append(import_directory)
-#
-# import_directory = os.path.join(import_directory, "DisplayObjects")
-# sys.path.append(import_directory)
-
+import os
+import sys
 from time import sleep
 import color
 import cursor as cursor_manager
-import keyboard_input as kb
+from input_handler import InputHandler
 import window_manager
-# from terminal_objects import TerminalObjects as TObj
 from units import Units
+
+if __name__ == "__main__":
+    # This is an importer I made for all of my programs going forward, so I wouldn't have to deal with
+    # creating and renaming the utilities files for every program or have to deal with learning the "correct" methods.
+
+    utilities_directory = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    sys.path.append(utilities_directory)
+
+    # Optionally add if you want to use the input system.
+    inputs_directory = os.path.join(utilities_directory, "inputs")
+    sys.path.append(inputs_directory)
+    # Optionally add if you want to use the terminal system.
+    terminal_directory = os.path.join(utilities_directory, "TerminalSystem")
+    sys.path.append(terminal_directory)
+    display_objects_directory = os.path.join(terminal_directory, "DisplayObjects")
+    sys.path.append(display_objects_directory)
+    helper_directory = os.path.join(terminal_directory, "HelperObjects")
+    sys.path.append(helper_directory)
 
 
 class TerminalManager:
     """Manage a terminal interface."""
 
-    cursor_pos = [0, 0]
-    header_text = ""
-    options = []
-    footer_text = ""
-    keybinds = {}
-
     default_color_scheme = {
         "header": [color.YELLOW],
         "options": [color.BLUE],
         "footer": [color.YELLOW],
-        "_keybinds": [color.BRIGHT_BLACK, color.ITALIC],
+        "keybinds": [color.BRIGHT_BLACK, color.ITALIC],
         "selected_option": [color.BOLD, color.GREEN],
     }
 
     color_scheme = {}
 
-    def __init__(self, screen_size: tuple[int, int]) -> None:
+    def __init__(self, window_name: str = "Jason's Terminal System",
+                 minimum_screen_size: tuple[int, int] = (5, 10)) -> None:
         """Initialize the TerminalManager object.
 
         Args:
-            screen_size (tuple[int, int]):
-                The minimum screen _size (y, x).
+            minimum_screen_size (tuple[int, int]):
+                The minimum screen size (y, x).
         """
-        self.units = Units()
+        # Set up the window.
+        os.system("title " + window_name)
 
-        self.kb = kb.KeyboardInput()
-        print("Keyboard input initialized.")
-        self.cursor = cursor_manager.Cursor()
+        # Set up the input.
+        self.input = InputHandler(window_name)
+        print("Input initialized.")
 
         # Set up the cursor.
+        self.cursor = cursor_manager.Cursor()
         self.cursor.hide()
         self.cursor.clear_screen()
+        print("Cursor initialized.")
 
-        # Calibrate the screen _size.
-        self.screen_size = self.get_screen_size(screen_size)
-        print(self.screen_size)
-        input()
-        # self.cursor.set_screen(screen)
+        # Calibrate the screen size.
+        self.screen_size = self.get_screen_size(minimum_screen_size)
+        print("Screen size set to:", self.screen_size)
+        # input()
 
-        # Set up the _display.
+        # Set up the display.
         self.window_manager = window_manager.WindowManager(self.screen_size)
+        print("Window manager initialized.")
 
-        # Set up the _color_scheme scheme.
+        # Set up the color scheme.
         self.color_scheme = self.default_color_scheme
 
+        # Set up the keybinds.
+        self.keybinds = {
+            "esc": [self.quit],
+        }
+
+        # Set up the mouse.
+        self.mouse_enabled = False
+
+        self.units = Units()
+
+    def loop(self) -> None:
+        """Run the main loop."""
+        self.input.check_keybinds()
+
+
+    def quit(self) -> None:
+        """Quit the program."""
+        self.cursor.show()
+        self.cursor.set_pos()
+        self.input.clear_input_buffer()
+        print(color.ERROR + "\n\nCTRL + C?! You're killing me!!! Aww, fine... Bye!" + color.END)
+        sys.exit()
+
+    def refresh_screen(self) -> None:
+        """Refresh the screen."""
+        self.window_manager.refresh_screen()
+
     def get_screen_size(self, min_screen_size: tuple[int, int]) -> tuple[int, int]:
-        """Get the screen _size.
+        """Get the screen size.
 
         Args:
             min_screen_size (tuple[int, int]):
-                The minimum screen _size (y, x).
+                The minimum screen size (y, x).
 
         Returns:
-            tuple[int, int]: The screen _size (y, x).
+            tuple[int, int]: The screen size (y, x).
         """
         x = 156
-        y = 41
+        y = 39
 
         while True:
 
             # Get input
-            up = self.kb.is_held("up")
-            down = self.kb.is_held("down")
-            left = self.kb.is_held("left")
-            right = self.kb.is_held("right")
-            finish = self.kb.is_newly_pressed("enter") or self.kb.is_newly_pressed("esc")
+            up = self.input.kb.is_held("up")
+            down = self.input.kb.is_held("down")
+            left = self.input.kb.is_held("left")
+            right = self.input.kb.is_held("right")
+            finish = self.input.kb.is_newly_pressed("enter") or self.input.kb.is_newly_pressed("esc")
 
             if finish:
                 break

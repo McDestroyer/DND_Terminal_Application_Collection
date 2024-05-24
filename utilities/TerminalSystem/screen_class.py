@@ -114,26 +114,22 @@ class Screen:
         self._display_array = [
             [
                 [
-                    " ", [color.BACKGROUND_BLACK]
+                    " ", [color.BACKGROUND_DEFAULT_COLOR]
                 ] for _ in range(self._screen_size[1])
             ] for _ in range(self._screen_size[0])
         ]
 
     def add_to_display(self, grid_to_add: list[list[list[str | list[str]]]],
                        coordinates: list[int] | tuple[int, int]) -> None:
-        """Add stuff to the _display.
+        """Add stuff to the display.
 
         Args:
             grid_to_add (list[list[list[str | list[str]]]]):
-                The grid of characters to add to the _display.
+                The grid of characters to add to the display.
             coordinates (list[int] | tuple[int, int]):
                 The coordinates of the top-left slot to add the grid from.
         """
-        # if (_coordinates[0] + len(grid_to_add) > len(self._display_array)-1 or
-        #         _coordinates[1] + len(grid_to_add[0]) > len(self._display_array[0])-1):
-        #     raise IndexError("Coordinates out of bounds.")
-
-        # Go through the grid and add the characters to the _display in a position offset by the _coordinates given.
+        # Go through the grid and add the characters to the display in a position offset by the coordinates given.
         for y, row in enumerate(grid_to_add):
             if y + coordinates[0] > len(self._display_array) - 1:
                 break

@@ -94,7 +94,7 @@ def bounded_text_formatter(message: tuple | str | list, size: tuple[int, int], s
                     continue
 
                 # If the word is not too long yet, it adds it to the next line.
-                current_printing_line.removesuffix(current_word)
+                current_printing_line = current_printing_line.removesuffix(current_word)
 
                 printing_lines.append(current_printing_line.strip())
                 current_word += char

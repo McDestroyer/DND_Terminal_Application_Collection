@@ -12,13 +12,8 @@
 # pylint: disable=undefined-variable
 
 
-import sys
-import os
-from time import sleep
-
 import cursor
-import color
-import keyboard_input as keybd
+from input_handler import keyboard_input as keybd
 from personal_functions import *
 
 
