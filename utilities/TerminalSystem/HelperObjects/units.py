@@ -16,42 +16,115 @@ class Unit:
         self.to_char_func = to_char
         self.from_char_func = from_char
 
-    def to_char(self, value: float, screen_size: tuple[int, int], axis: int) -> float:
+    def to_char(self, value: float, screen_size: tuple[int, int], axis: int) -> int:
         """Convert a value to char format from whatever it was before.
 
         Args:
             value:
                 The value to convert.
             screen_size (tuple[int, int]):
-                The _size of the screen.
+                The size of the screen.
             axis (int):
                 The axis to convert.
         """
-        return self.to_char_func(value, screen_size, axis)
+        return int(self.to_char_func(value, screen_size, axis))
 
-    def from_char(self, value: float, screen_size: tuple[int, int], axis: int) -> float:
+    def from_char(self, value: float, screen_size: tuple[int, int], axis: int) -> int:
         """Convert a value from char format to whatever it was before.
 
         Args:
             value:
                 The value to convert.
             screen_size (tuple[int, int]):
-                The _size of the screen.
+                The size of the screen.
             axis (int):
                 The axis to convert.
         """
         return self.from_char_func(value, screen_size, axis)
 
 
+# Put all unit functions here.
+
+
+# CHAR
+
+
+def char_to_char(value: float, screen_size: tuple[int, int], axis: int) -> float:
+    """Convert a value to char format from whatever it was before.
+
+    Args:
+        value:
+            The value to convert.
+        screen_size (tuple[int, int]):
+            The size of the screen.
+        axis (int):
+            The axis to convert.
+    """
+    return value
+
+
+def char_from_char(value: float, screen_size: tuple[int, int], axis: int) -> float:
+    """Convert a value from char format to whatever it was before.
+
+    Args:
+        value:
+            The value to convert.
+        screen_size (tuple[int, int]):
+            The size of the screen.
+        axis (int):
+            The axis to convert.
+
+    Returns:
+        float: The value in characters.
+    """
+    return value
+
+
+# PERCENT
+
+
+def percent_to_char(value: float, screen_size: tuple[int, int], axis: int) -> int:
+    """Convert a value to char format from whatever it was before.
+
+    Args:
+        value:
+            The value to convert.
+        screen_size (tuple[int, int]):
+            The size of the screen.
+        axis (int):
+            The axis to convert.
+
+    Returns:
+        int: The value in characters.
+    """
+    return int(value / 100 * screen_size[axis])
+
+
+def percent_from_char(value: float, screen_size: tuple[int, int], axis: int) -> float:
+    """Convert a value from char format to whatever it was before.
+
+    Args:
+        value:
+            The value to convert.
+        screen_size (tuple[int, int]):
+            The size of the screen.
+        axis (int):
+            The axis to convert.
+    """
+    return 100 * value / screen_size[axis]
+
+
+
+
 class Units:
-    """The units of the terminal _display.
+    """The units of the terminal display.
 
     Attributes:
         CHAR (callable):
             The numbers given with this refer to distance as a number of characters. Note that a characters dimensions
             are roughly 2:1.
         PERCENT (callable):
-            The numbers given with this refer to distance as a percentage of the screen's _size.
+            The numbers given with this refer to distance as a percentage of the screen's size.
             Whether horizontal or vertical is determined by context.
     """
     # DOUBLED_CHAR (callable):
@@ -66,11 +139,11 @@ class Units:
 
     CHAR: Unit = Unit(
         name="CHAR",
-        to_char=lambda value, screen, ax: value,
-        from_char=lambda value, screen, ax: value,
+        to_char=char_to_char,
+        from_char=char_from_char,
     )
     PERCENT: Unit = Unit(
         name="PERCENT",
-        to_char=lambda value, size, ax: int(value / 100 * size[ax]),
-        from_char=lambda value, size, ax: 100 * value / size[ax],
+        to_char=percent_to_char,
+        from_char=percent_from_char,
     )

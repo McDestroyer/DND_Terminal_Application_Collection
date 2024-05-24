@@ -1,11 +1,5 @@
 import os
 import sys
-from time import sleep
-import color
-import cursor as cursor_manager
-from input_handler import InputHandler
-import window_manager
-from units import Units
 
 if __name__ == "__main__":
     # This is an importer I made for all of my programs going forward, so I wouldn't have to deal with
@@ -24,6 +18,20 @@ if __name__ == "__main__":
     sys.path.append(display_objects_directory)
     helper_directory = os.path.join(terminal_directory, "HelperObjects")
     sys.path.append(helper_directory)
+
+
+from time import sleep
+
+import color
+import cursor as cursor_manager
+
+from input_handler import InputHandler
+import window_manager
+from units import Units
+
+# For the loading screen.
+from terminal_objects import TerminalObjects as TObj
+from coordinates import Coordinate
 
 
 class TerminalManager:
@@ -82,10 +90,53 @@ class TerminalManager:
 
         self.units = Units()
 
+        self.run_loading_animation()
+
+    def run_loading_animation(self) -> None:
+        """Run the loading logo animation."""
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "SavedScreens", "loading_screen.pkl")
+        try:
+            loading_screen = self.window_manager.load_screen_from_file("loading", path)
+            logo_box = self.window_manager.set_current_screen(loading_screen).get_object_by_name("Logo Box")
+        except FileNotFoundError:
+            # Set up the loading screen if the file got deleted.
+            load_screen = self.window_manager.add_screen("loading")
+            logo_box = TObj.IMAGE_BOX(
+                "Logo Box",
+                coordinates=Coordinate(self.screen_size, -265, 0, unit_y=Units.PERCENT, unit_x=Units.PERCENT),
+                size=Coordinate(self.screen_size, 500, 100, unit_y=Units.PERCENT, unit_x=Units.PERCENT),
+                image="C:\\Users\\dafan\\OneDrive\\Desktop\\CS\\TTRPG\\D&D Assistant Programs\\utilities\\inputs\\test.AAI",
+                title="Logo Box", border_material=None,
+                border_color=[color.BACKGROUND_BLACK+color.BLACK],
+                title_mods=[color.UNDERLINE, color.RED, color.BACKGROUND_BLACK],
+                shrink_to_fit=False
+            )
+            load_screen.add_object(logo_box)
+            self.window_manager.save_screen_to_file("loading", path)
+
+        # sleep(1)
+        for i in range(45):
+            self.loop()
+
+            # Quit if the escape key is pressed.
+            if self.input.kb.is_newly_pressed("esc"):
+                break
+
+            logo_box.coordinates = Coordinate(
+                self.screen_size,
+                logo_box.coordinates.values["PERCENT"][0] + 3,
+                logo_box.coordinates.values["PERCENT"][1],
+                unit_x=Units.PERCENT,
+                unit_y=Units.PERCENT
+            )
+
+            self.refresh_screen()
+            sleep(.02)
+
     def loop(self) -> None:
         """Run the main loop."""
         self.input.check_keybinds()
-
+        self.window_manager.current_screen.run_animations()
 
     def quit(self) -> None:
         """Quit the program."""

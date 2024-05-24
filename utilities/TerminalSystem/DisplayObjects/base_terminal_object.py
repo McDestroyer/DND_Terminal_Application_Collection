@@ -22,13 +22,13 @@ class PrintableObject:
                 The description of the object.
                 Defaults to None.
             contents (list[list[list[str | list[str]]], optional):
-                The contents of the object in terminal _display format.
+                The contents of the object in terminal display format.
                 Defaults to a list of empty characters.
             z_index (int, optional):
                 The z-index of the object.
                 Defaults to 0.
             visible (bool, optional):
-                Whether the object is _visible.
+                Whether the object is visible.
                 Defaults to True.
             """
         self._name = name
@@ -45,7 +45,7 @@ class PrintableObject:
             self._minimum_size = (1, 1)
         else:
             self._minimum_size = minimum_size
-        if self._size.char_value_y < self._minimum_size[0] or self._size.char_value_x < self._minimum_size[1]:
+        if self._size._char_value_y < self._minimum_size[0] or self._size._char_value_x < self._minimum_size[1]:
             self._size = deepcopy(self._minimum_size)
 
         # Ensure the contents are not None.
@@ -162,9 +162,11 @@ class PrintableObject:
             size (Coordinate):
                 The new size of the object.
         """
-        if size.char_value_y < self._minimum_size[0] or size.char_value_x < self._minimum_size[1]:
-            self._size = size
-            self._should_refresh = True
+        self._size = Coordinate(
+            self._coordinates.screen_size,
+            max(size.values["CHAR"][0], self._minimum_size.values["CHAR"][0]),
+            max(size.values["CHAR"][1], self._minimum_size.values["CHAR"][1])
+        )
 
     @minimum_size.setter
     def minimum_size(self, minimum_size: Coordinate) -> None:

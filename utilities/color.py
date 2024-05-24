@@ -1,4 +1,4 @@
-"""A mapping between colors and escape codes for use in the _text function"""
+"""A mapping between colors and escape codes for use in the text function"""
 
 # pylint: disable=wrong-import-position
 
@@ -85,7 +85,7 @@ END = '\033[0m'
 
 
 def custom(code: int, back: bool = False) -> str:
-    """Give a _text or background modification _color_scheme code based off of a specific escape code.
+    """Give a text or background modification color code based off of a specific escape code.
 
     Args:
         code (int): The code of the desired modification.
@@ -94,54 +94,52 @@ def custom(code: int, back: bool = False) -> str:
             Defaults to False.
 
     Returns:
-        str: The modification escape code ready to be input to _text.
+        str: The modification escape code ready to be input to text.
     """
-    return f'\033[38;5;{code}m' if not back else f'\033[48;5;{code}m'
+    return f'\033[{4 if back else 3}8;5;{code}m'
 
 
 def rgb(red: int = 0, green: int = 0, blue: int = 0, back: bool = False) -> str:
-    """Give a _text or background modification _color_scheme code based off of a decimal RGB input.
+    """Give a text or background modification color code based off of a decimal RGB input.
 
     Args:
         red (int, optional):
-            Red value of the _text (0-255).
+            Red value of the text (0-255).
             Defaults to 0.
         green (int, optional):
-            Green value of the _text (0-255).
+            Green value of the text (0-255).
             Defaults to 0.
         blue (int, optional):
-            Blue value of the _text (0-255).
+            Blue value of the text (0-255).
             Defaults to 0.
         back (bool, optional):
             If True gives the code for modifying the background instead of the foreground.
             Defaults to False.
 
     Returns:
-        str: The modification escape code ready to be input to _text.
+        str: The modification escape code ready to be input to text.
     """
-    return (f'\033[38;2;{red};{green};{blue}m' if not back
-            else f'\033[48;2;{red};{green};{blue}m')
+    return f'\033[{4 if back else 3}8;2;{red};{green};{blue}m'
 
 
 def rgb_hex(red: str = 0, green: str = 0, blue: str = 0, back: bool = False) -> str:
-    """Give a _text or background modification _color_scheme code based off of a hex RGB input.
+    """Give a text or background modification color code based off of a hex RGB input.
 
     Args:
         red (str, optional):
-            Red value of the _text (00-FF).
+            Red value of the text (00-FF).
             Defaults to 0.
         green (str, optional):
-            Green value of the _text (00-FF).
+            Green value of the text (00-FF).
             Defaults to 0.
         blue (str, optional):
-            Blue value of the _text (00-FF).
+            Blue value of the text (00-FF).
             Defaults to 0.
         back (bool, optional):
             If True gives the code for modifying the background instead of the foreground.
             Defaults to False.
 
     Returns:
-        str: The modification escape code ready to be input to _text.
+        str: The modification escape code ready to be input to text.
     """
-    return (f'\033[38;2;{int(red, 16)};{int(green, 16)};{int(blue, 16)}m' if not back
-            else f'\033[48;2;{red};{green};{blue}m')
+    return f'\033[{4 if back else 3}8;2;{int(red, 16)};{int(green, 16)};{int(blue, 16)}m'

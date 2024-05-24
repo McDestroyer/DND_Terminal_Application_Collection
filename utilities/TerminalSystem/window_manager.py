@@ -76,7 +76,7 @@ class WindowManager:
         with open(file_path, "wb") as file:
             pickle.dump(screen, file)
 
-    def load_screen_from_file(self, screen_name: str, file_path: str) -> None:
+    def load_screen_from_file(self, screen_name: str, file_path: str) -> Screen:
         """Load a screen from a file and add it to the WindowManager.
 
         Args:
@@ -84,12 +84,16 @@ class WindowManager:
                 The name of the screen.
             file_path (str):
                 The path to the file.
+
+        Returns:
+            Screen: The screen.
         """
         with open(file_path, "rb") as file:
             screen = pickle.load(file)
 
-        screen.set_name(screen_name)
+        screen.name = screen_name
         self._screens.append(screen)
+        return screen
 
     def get_screen_by_name(self, screen_name: str) -> Screen | None:
         """Return a screen from the WindowManager.

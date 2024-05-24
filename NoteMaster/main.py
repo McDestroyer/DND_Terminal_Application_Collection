@@ -97,21 +97,21 @@ class NoteMaster:
 
         self.screen = self.terminal.window_manager.current_screen
 
-        self.frame_rate = 20
+        self.frame_rate = 10
         self.frame_time = (1 / self.frame_rate) * 1_000
 
         # Set up the objects.
         box = TObj.TEXT_BOX(
             "Bob Box", coordinates=Coordinate(self.screen_size, 5, 30),
             size=Coordinate(self.screen_size, 10, 25),
-            text="This is a box. I am happy!", title="Bob Box", border_color=color.RED,
-            title_mods=[color.BOLD, color.UNDERLINE, color.BLUE, color.BACKGROUND_RED],
+            text="This is a box. I am happy!", title="Bob Box", border_color=[color.RED],
+            title_mods=[color.UNDERLINE, color.BLUE, color.BACKGROUND_RED],
             color_scheme=[color.BACKGROUND_DEFAULT_COLOR, color.BRIGHT_GREEN])
         box2 = TObj.TEXT_BOX(
             "Bob Box 2", coordinates=Coordinate(self.screen_size, 11, 50, unit_x=Units.PERCENT),
             size=Coordinate(self.screen_size, 10, 50, unit_x=Units.PERCENT),
-            text="This is another box. I am happy!", title="Bob Box 2", border_color=color.RED,
-            title_mods=[color.BOLD, color.UNDERLINE, color.RED, color.BACKGROUND_RED],
+            text="This is another box. I am happy!", title="Bob Box 2", border_color=[color.RED],
+            title_mods=[color.UNDERLINE, color.RED, color.BACKGROUND_RED],
             color_scheme=[color.BACKGROUND_DEFAULT_COLOR, color.BRIGHT_GREEN])
         mouse = TObj.TERMINAL_OBJECT(
             "Mouse", coordinates=Coordinate(self.screen_size, 1, 1),
@@ -132,52 +132,55 @@ class NoteMaster:
             "Bob Box 3",
             coordinates=Coordinate(self.screen_size, 50, 50, unit_y=Units.PERCENT, unit_x=Units.PERCENT),
             size=Coordinate(self.screen_size, 50, 50, unit_y=Units.PERCENT, unit_x=Units.PERCENT),
-            text="I'm the hidden 3rd box! Somehow, my existence works!", title="Bob Box 3", border_color=color.BLUE,
-            title_mods=[color.BOLD, color.UNDERLINE, color.BRIGHT_RED, color.BACKGROUND_BLUE],
+            text="I'm the hidden 3rd box! Somehow, my existence works!", title="Bob Box 3", border_color=[color.BLUE],
+            title_mods=[color.UNDERLINE, color.BRIGHT_RED, color.BACKGROUND_BLUE],
             color_scheme=[color.BACKGROUND_DEFAULT_COLOR, color.BRIGHT_GREEN]
         )
         box4 = TObj.TEXT_BOX(
             "Bob Box 4",
             coordinates=Coordinate(self.screen_size, 0, 0, unit_y=Units.PERCENT, unit_x=Units.PERCENT),
             size=Coordinate(self.screen_size, 50, 50, unit_y=Units.PERCENT, unit_x=Units.PERCENT),
-            text="I'm the hidden 4th box! Somehow, my existence works!", title="Bob Box 4", border_color=color.BLUE,
-            title_mods=[color.BOLD, color.UNDERLINE, color.BRIGHT_RED, color.BACKGROUND_BLUE],
+            text="I'm the hidden 4th box! Somehow, my existence works!", title="Bob Box 4", border_color=[color.BLUE],
+            title_mods=[color.UNDERLINE, color.BRIGHT_RED, color.BACKGROUND_BLUE],
             color_scheme=[color.BACKGROUND_DEFAULT_COLOR, color.BRIGHT_GREEN]
         )
         box5 = TObj.TEXT_BOX(
             "Bob Box 5",
             coordinates=Coordinate(self.screen_size, 0, 50, unit_y=Units.PERCENT, unit_x=Units.PERCENT),
             size=Coordinate(self.screen_size, 50, 50, unit_y=Units.PERCENT, unit_x=Units.PERCENT),
-            text="I'm the hidden 5th box! Somehow, my existence works!", title="Bob Box 5", border_color=color.BLUE,
-            title_mods=[color.BOLD, color.UNDERLINE, color.BRIGHT_RED, color.BACKGROUND_BLUE],
+            text="I'm the hidden 5th box! Somehow, my existence works!", title="Bob Box 5", border_color=[color.BLUE],
+            title_mods=[color.UNDERLINE, color.BRIGHT_RED, color.BACKGROUND_BLUE],
             color_scheme=[color.BACKGROUND_DEFAULT_COLOR, color.BRIGHT_GREEN]
         )
         box6 = TObj.TEXT_BOX(
             "Bob Box 6",
             coordinates=Coordinate(self.screen_size, 50, 0, unit_y=Units.PERCENT, unit_x=Units.PERCENT),
             size=Coordinate(self.screen_size, 50, 50, unit_y=Units.PERCENT, unit_x=Units.PERCENT),
-            text="I'm the hidden 6th box! Somehow, my existence works!", title="Bob Box 6", border_color=color.BLUE,
-            title_mods=[color.BOLD, color.UNDERLINE, color.BRIGHT_RED, color.BACKGROUND_BLUE],
+            text="I'm the hidden 6th box! Somehow, my existence works!", title="Bob Box 6", border_color=[color.BLUE],
+            title_mods=[color.UNDERLINE, color.BRIGHT_RED, color.BACKGROUND_BLUE],
             color_scheme=[color.BACKGROUND_DEFAULT_COLOR, color.BRIGHT_GREEN]
         )
-
-        # Add the objects to the screen.
-        self.screen.add_object(box)
-        self.screen.add_object(box2)
-        self.screen.add_object(mouse)
-
-        self.screen_dict["menu 1"].add_object(mouse)
+        # Add the objects to the screens.
+        self.screen_dict["home"].add_object(box)
+        self.screen_dict["home"].add_object(box2)
+        self.screen_dict["home"].add_object(mouse)
 
         self.screen_dict["menu 1"].add_object(box3)
         self.screen_dict["menu 1"].add_object(box4)
         self.screen_dict["menu 1"].add_object(box5)
         self.screen_dict["menu 1"].add_object(box6)
+        self.screen_dict["menu 1"].add_object(mouse)
 
-        self.terminal.input.add_keybind("move box up", "up", self.terminal.input.kb, "held", self.move_box, box, (-1, 0))
-        self.terminal.input.add_keybind("move box down", "down", self.terminal.input.kb, "held", self.move_box, box, (1, 0))
-        self.terminal.input.add_keybind("move box left", "left", self.terminal.input.kb, "held", self.move_box, box, (0, -1))
-        self.terminal.input.add_keybind("move box right", "right", self.terminal.input.kb, "held", self.move_box, box, (0, 1))
-        self.terminal.input.add_keybind("toggle screen 2", "tab", self.terminal.input.kb, "newly_pressed", self.toggle_screen_2)
+        self.terminal.input.add_keybind("move box up", "up", self.terminal.input.kb,
+                                        "held", self.move_box, box, (-1, 0))
+        self.terminal.input.add_keybind("move box down", "down", self.terminal.input.kb,
+                                        "held", self.move_box, box, (1, 0))
+        self.terminal.input.add_keybind("move box left", "left", self.terminal.input.kb,
+                                        "held", self.move_box, box, (0, -1))
+        self.terminal.input.add_keybind("move box right", "right", self.terminal.input.kb,
+                                        "held", self.move_box, box, (0, 1))
+        self.terminal.input.add_keybind("toggle screen 2", "tab", self.terminal.input.kb,
+                                        "newly_pressed", self.toggle_screen_2)
 
         # Update the display.
         self.terminal.refresh_screen()
@@ -198,10 +201,12 @@ class NoteMaster:
     def main_loop(self) -> None:
         """Main"""
 
-        box = self.screen.get_object_by_name("Bob Box")
-        box2 = self.screen.get_object_by_name("Bob Box 2")
-        mouse = self.screen.get_object_by_name("Mouse")
+        # box = self.screen.get_object_by_name("Bob Box")
+        # box2 = self.screen.get_object_by_name("Bob Box 2")
         # past_times = []  # For debugging and timing purposes.
+
+        self.screen = self.terminal.window_manager.set_current_screen("home")
+        mouse = self.screen.get_object_by_name("Mouse")
 
         while True:
             start_time = time_ns()
@@ -229,33 +234,6 @@ class NoteMaster:
             if new_coords is not None and new_coords != mouse.coordinates:
                 mouse.coordinates = new_coords
 
-            # Move the box around.
-
-            # if self.terminal.input.kb.get_status("up")["held"]:
-            #     box.coordinates = Coordinate(
-            #         self.terminal.screen_size,
-            #         box.coordinates.values["CHAR"][0] - 1,
-            #         box.coordinates.values["CHAR"][1]
-            #     )
-            # if self.terminal.input.kb.get_status("down")["held"]:
-            #     box.coordinates = Coordinate(
-            #         self.terminal.screen_size,
-            #         box.coordinates.values["CHAR"][0] + 1,
-            #         box.coordinates.values["CHAR"][1]
-            #     )
-            # if self.terminal.input.kb.get_status("left")["held"]:
-            #     box.coordinates = Coordinate(
-            #         self.terminal.screen_size,
-            #         box.coordinates.values["CHAR"][0],
-            #         box.coordinates.values["CHAR"][1] - 2
-            #     )
-            # if self.terminal.input.kb.get_status("right")["held"]:
-            #     box.coordinates = Coordinate(
-            #         self.terminal.screen_size,
-            #         box.coordinates.values["CHAR"][0],
-            #         box.coordinates.values["CHAR"][1] + 2
-            #     )
-
             # # Make the box flash.
             # if time() % .75 < 0.05:
             #     if box.visible:
@@ -265,6 +243,10 @@ class NoteMaster:
 
             # Update the display.
             self.terminal.refresh_screen()
+
+            self.terminal.cursor.set_pos(0, self.screen_size[1] + 1)
+            print(" " * self.screen_size[1], end="\r", flush=False)
+            # print(logo_box.im)
 
             loop_time = (time_ns() - start_time) / 1_000_000
             # if len(past_times) > 100:

@@ -26,17 +26,17 @@ class Coordinate:
         # Get the values in character form.
         self._given_value_y = value_y
         self._given_value_x = value_x
-        self.char_value_y = unit_y.to_char(value_y, screen_size, 0)
-        self.char_value_x = unit_x.to_char(value_x, screen_size, 1)
-        self.unit_y = unit_y
-        self.unit_x = unit_x
+        self._char_value_y = unit_y.to_char(value_y, screen_size, 0)
+        self._char_value_x = unit_x.to_char(value_x, screen_size, 1)
+        self._unit_y = unit_y
+        self._unit_x = unit_x
 
         # Convert the values to all units and store them.
-        self.values = {
-            unit_y.name: [value_y, unit_y.from_char(self.char_value_x, screen_size, 0)],
+        self._values = {
+            unit_y.name: [value_y, unit_y.from_char(self._char_value_x, screen_size, 0)],
         }
         if unit_x != unit_y:
-            self.values[unit_x.name] = [unit_x.from_char(self.char_value_y, screen_size, 1), value_x]
+            self._values[unit_x.name] = [unit_x.from_char(self._char_value_y, screen_size, 1), value_x]
 
         self._update_values()
 
@@ -45,10 +45,10 @@ class Coordinate:
         for unit in Units.__dict__.keys():
             if unit.startswith("__"):
                 continue
-            if unit not in self.values:
-                self.values[unit] = [
-                    Units.__dict__[unit].from_char(self.char_value_y, self._screen_size, 0),
-                    Units.__dict__[unit].from_char(self.char_value_x, self._screen_size, 1)
+            if unit not in self._values:
+                self._values[unit] = [
+                    Units.__dict__[unit].from_char(self._char_value_y, self._screen_size, 0),
+                    Units.__dict__[unit].from_char(self._char_value_x, self._screen_size, 1)
                 ]
 
     def add_with_unit(self, coord: 'Coordinate', unit: Unit) -> 'Coordinate':
@@ -60,8 +60,8 @@ class Coordinate:
             unit (Unit):
                 The unit to add.
         """
-        y_vals = self.values[unit.name][0] + coord.values[unit.name][0]
-        x_vals = self.values[unit.name][1] + coord.values[unit.name][1]
+        y_vals = self._values[unit.name][0] + coord._values[unit.name][0]
+        x_vals = self._values[unit.name][1] + coord._values[unit.name][1]
 
         return Coordinate(
             self._screen_size,
@@ -70,6 +70,115 @@ class Coordinate:
             unit,
             unit
         )
+
+    @property
+    def values(self) -> dict[str, list[float]]:
+        """Return the values of the coordinate.
+
+        Returns:
+            dict[str, list[float]]: The values of the coordinate.
+        """
+        return self._values
+
+    @property
+    def char_value_y(self) -> float:
+        """Return the y-coordinate in characters.
+
+        Returns:
+            float: The y-coordinate in characters.
+        """
+        return self._char_value_y
+
+    @char_value_y.setter
+    def char_value_y(self, value: float) -> None:
+        """Set the y-coordinate in characters.
+
+        Args:
+            value (float):
+                The y-coordinate in characters.
+        """
+        self._char_value_y = value
+        self._update_values()
+
+    @property
+    def char_value_x(self) -> float:
+        """Return the x-coordinate in characters.
+
+        Returns:
+            float: The x-coordinate in characters.
+        """
+        return self._char_value_x
+
+    @char_value_x.setter
+    def char_value_x(self, value: float) -> None:
+        """Set the x-coordinate in characters.
+
+        Args:
+            value (float):
+                The x-coordinate in characters.
+        """
+        self._char_value_x = value
+        self._update_values()
+
+    @property
+    def unit_y(self) -> Unit:
+        """Return the y-coordinate unit.
+
+        Returns:
+            Unit: The y-coordinate unit.
+        """
+        return self._unit_y
+
+    @unit_y.setter
+    def unit_y(self, unit: Unit) -> None:
+        """Set the y-coordinate unit.
+
+        Args:
+            unit (Unit):
+                The y-coordinate unit.
+        """
+        self._unit_y = unit
+
+    @property
+    def unit_x(self) -> Unit:
+        """Return the x-coordinate unit.
+
+        Returns:
+            Unit: The x-coordinate unit.
+        """
+        return self._unit_x
+
+    @unit_x.setter
+    def unit_x(self, unit: Unit) -> None:
+        """Set the x-coordinate unit.
+
+        Args:
+            unit (Unit):
+                The x-coordinate unit.
+        """
+        self._unit_x = unit
+
+    @property
+    def screen_size(self) -> tuple[int, int]:
+        """Return the size of the screen.
+
+        Returns:
+            tuple[int, int]: The size of the screen.
+        """
+        return self._screen_size
+
+    @screen_size.setter
+    def screen_size(self, size: tuple[int, int]) -> None:
+        """Set the size of the screen.
+
+        Args:
+            size (tuple[int, int]):
+                The size of the screen.
+        """
+        self._screen_size = size
+        self._char_value_y = self._unit_y.to_char(self._given_value_y, self._screen_size, 0)
+        self._char_value_x = self._unit_x.to_char(self._given_value_x, self._screen_size, 1)
+        self._update_values()
 
     def __str__(self):
         return f"Coordinates: ({self.values['CHAR'][0]}, {self.values['CHAR'][1]})"
@@ -83,9 +192,9 @@ class Coordinate:
     def __setitem__(self, key, value):
         # self.values["CHAR"][key] = value
         if key == 0:
-            self.char_value_y = value[0]
+            self._char_value_y = value[0]
         elif key == 1:
-            self.char_value_x = value[1]
+            self._char_value_x = value[1]
         else:
             raise (IndexError("Index out of range."))
         self._update_values()
@@ -130,26 +239,38 @@ class Coordinate:
     def __add__(self, other):
         return Coordinate(
             self._screen_size,
-            self.unit_y.from_char(self.char_value_y + other.char_value_y, self._screen_size, 0),
-            self.unit_x.from_char(self.char_value_x + other.char_value_x, self._screen_size, 1),
-            self.unit_y,
-            self.unit_x
+            self._unit_y.from_char(self._char_value_y + other._char_value_y, self._screen_size, 0),
+            self._unit_x.from_char(self._char_value_x + other._char_value_x, self._screen_size, 1),
+            self._unit_y,
+            self._unit_x
         )
 
     def __sub__(self, other):
         return Coordinate(
             self._screen_size,
-            self.unit_y.from_char(self.char_value_y - other.char_value_y, self._screen_size, 0),
-            self.unit_x.from_char(self.char_value_x - other.char_value_x, self._screen_size, 1),
-            self.unit_y,
-            self.unit_x
+            self._unit_y.from_char(self._char_value_y - other._char_value_y, self._screen_size, 0),
+            self._unit_x.from_char(self._char_value_x - other._char_value_x, self._screen_size, 1),
+            self._unit_y,
+            self._unit_x
         )
 
     def __mul__(self, other):
-        raise NotImplementedError("Multiplication of _coordinates is not supported.")
+        return Coordinate(
+            self._screen_size,
+            self._unit_y.from_char(self._char_value_y * other.char_value_y, self._screen_size, 0),
+            self._unit_x.from_char(self._char_value_x * other.char_value_x, self._screen_size, 1),
+            self._unit_y,
+            self._unit_x
+        )
 
     def __truediv__(self, other):
-        raise NotImplementedError("Division of _coordinates is not supported.")
+        return Coordinate(
+            self._screen_size,
+            self._unit_y.from_char(self._char_value_y / other.char_value_y, self._screen_size, 0),
+            self._unit_x.from_char(self._char_value_x / other.char_value_x, self._screen_size, 1),
+            self._unit_y,
+            self._unit_x
+        )
 
     def __floordiv__(self, other):
         raise NotImplementedError("Floor division of _coordinates is not supported.")
@@ -181,28 +302,28 @@ class Coordinate:
     def __neg__(self):
         return Coordinate(
             self._screen_size,
-            -self.unit_y.from_char(self.char_value_y, self._screen_size, 0),
-            -self.unit_x.from_char(self.char_value_x, self._screen_size, 1),
-            self.unit_y,
-            self.unit_x
+            -self._unit_y.from_char(self._char_value_y, self._screen_size, 0),
+            -self._unit_x.from_char(self._char_value_x, self._screen_size, 1),
+            self._unit_y,
+            self._unit_x
         )
 
     def __pos__(self):
         return Coordinate(
             self._screen_size,
-            self.unit_y.from_char(self.char_value_y, self._screen_size, 0),
-            self.unit_x.from_char(self.char_value_x, self._screen_size, 1),
-            self.unit_y,
-            self.unit_x
+            self._unit_y.from_char(self._char_value_y, self._screen_size, 0),
+            self._unit_x.from_char(self._char_value_x, self._screen_size, 1),
+            self._unit_y,
+            self._unit_x
         )
 
     def __abs__(self):
         return Coordinate(
             self._screen_size,
-            abs(self.unit_y.from_char(self.char_value_y, self._screen_size, 0)),
-            abs(self.unit_x.from_char(self.char_value_x, self._screen_size, 1)),
-            self.unit_y,
-            self.unit_x
+            abs(self._unit_y.from_char(self._char_value_y, self._screen_size, 0)),
+            abs(self._unit_x.from_char(self._char_value_x, self._screen_size, 1)),
+            self._unit_y,
+            self._unit_x
         )
 
     def __invert__(self):
@@ -230,14 +351,14 @@ class Coordinate:
         raise NotImplementedError("Truncation of _coordinates is not supported.")
 
     def __iadd__(self, other):
-        self.char_value_y += other.char_value_y
-        self.char_value_x += other.char_value_x
+        self._char_value_y += other._char_value_y
+        self._char_value_x += other._char_value_x
         self._update_values()
         return self
 
     def __isub__(self, other):
-        self.char_value_y -= other.char_value_y
-        self.char_value_x -= other.char_value_x
+        self._char_value_y -= other._char_value_y
+        self._char_value_x -= other._char_value_x
         self._update_values()
         return self
 

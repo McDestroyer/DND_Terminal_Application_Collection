@@ -3,6 +3,7 @@ import pickle
 import color
 
 from base_terminal_object import PrintableObject
+from image_box import ImageBox
 
 
 class Screen:
@@ -93,10 +94,10 @@ class Screen:
                     pickle.dump(screen_object, file)
 
     def update_display(self) -> list[list[list[str | list[str]]]]:
-        """Update the screen _display array with the _contents of the screen objects and return it.
+        """Update the screen display array with the contents of the screen objects and return it.
 
         Returns:
-            list[list[list[str | list[str]]]]: The updated _display array.
+            list[list[list[str | list[str]]]]: The updated display array.
         """
         self.clear_display()
 
@@ -110,7 +111,7 @@ class Screen:
         return self._display_array
 
     def clear_display(self) -> None:
-        """Clear the _display array of all symbols."""
+        """Clear the display array of all symbols."""
         self._display_array = [
             [
                 [
@@ -121,7 +122,7 @@ class Screen:
 
     def add_to_display(self, grid_to_add: list[list[list[str | list[str]]]],
                        coordinates: list[int] | tuple[int, int]) -> None:
-        """Add stuff to the display.
+        """Add a grid to the display.
 
         Args:
             grid_to_add (list[list[list[str | list[str]]]]):
@@ -143,6 +144,12 @@ class Screen:
                 if column[0] != "":
                     self._display_array[y + coordinates[0]][x + coordinates[1]] = column
 
+    def run_animations(self) -> None:
+        """Run the animations of the screen objects."""
+        for screen_object in self._objects:
+            if screen_object.visible and type(screen_object) is ImageBox:
+                screen_object.update_image()
+
     def __str__(self):
         return self._name
 
@@ -150,7 +157,7 @@ class Screen:
         return self._name
 
     def __eq__(self, other):
-        return self._objects == other.screen_objects
+        return self._objects == other.objects
 
     def __ne__(self, other):
         return not self == other
@@ -234,14 +241,19 @@ class Screen:
                 The new size of the screen.
         """
         self._screen_size = new_screen_size
+        self.clear_display()
+        self._should_refresh = True
+        for screen_object in self._objects:
+            screen_object.coordinates = screen_object.coordinates.screen_size = new_screen_size
+            screen_object.size = screen_object.size.screen_size = new_screen_size
 
     @display_array.setter
     def display_array(self, new_display_array: list[list[list[str | list[str]]]]) -> None:
-        """Set the _display array.
+        """Set the display array. Kinda pointless bc it'd never be used (I hope)
 
         Args:
             new_display_array (list[list[list[str | list[str]]]]):
-                The new _display array.
+                The new display array.
         """
         self._display_array = new_display_array
 
