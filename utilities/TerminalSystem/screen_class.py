@@ -1,9 +1,11 @@
 import pickle
 
 import color
+import input_handler
 
 from base_terminal_object import PrintableObject
 from image_box import ImageBox
+from input_handler import KeyboardInput, MouseInput, GamepadInput
 
 
 class Screen:
@@ -20,6 +22,61 @@ class Screen:
             ] for _ in range(self._screen_size[0])
         ]
         self._should_refresh = True
+
+        self._key_bindings = dict()
+        self._disabled_key_bindings = dict()
+
+        self.default_keybinds = {
+
+            # MenuBox
+
+            # UP
+            "selection_up (KB_UP) [default: MenuBox]": ["up", input_handler.KeyboardInput, "held", self.run_object_keybinds,
+                                                        "selection_up", "MenuBox"],
+            "selection_up (GP_DPAD_UP) [default: MenuBox]": ["DPadUp", input_handler.GamepadInput, "held", self.run_object_keybinds,
+                                                             "selection_up", "MenuBox"],
+            # DOWN
+            "selection_down (KB_DOWN) [default: MenuBox]": ["down", input_handler.KeyboardInput, "held", self.run_object_keybinds,
+                                                            "selection_down", "MenuBox"],
+            "selection_down (GP_DPAD_DOWN) [default: MenuBox]": ["DPadDown", input_handler.GamepadInput, "held", self.run_object_keybinds,
+                                                                 "selection_down", "MenuBox"],
+            # LEFT
+            "selection_left (KB_LEFT) [default: MenuBox]": ["left", input_handler.KeyboardInput, "held", self.run_object_keybinds,
+                                                            "selection_left", "MenuBox"],
+            "selection_left (GP_DPAD_LEFT) [default: MenuBox]": ["DPadLeft", input_handler.GamepadInput, "held", self.run_object_keybinds,
+                                                                 "selection_left", "MenuBox"],
+            # RIGHT
+            "selection_right (KB_RIGHT) [default: MenuBox]": ["right", input_handler.KeyboardInput, "held", self.run_object_keybinds,
+                                                              "selection_right", "MenuBox"],
+            "selection_right (GP_DPAD_RIGHT) [default: MenuBox]": ["DPadRight", input_handler.GamepadInput, "held", self.run_object_keybinds,
+                                                                   "selection_right", "MenuBox"],
+            # # Cycle
+            # "selection_cycle (KB_TAB) [default: MenuBox]": ["right", input_handler.KeyboardInput, "held", self.run_object_keybinds,
+            #                                                   "cycle_selection", "MenuBox"],
+            # "selection_cycle (GP_DPAD_RIGHT) [default: MenuBox]": ["DPadRight", input_handler.GamepadInput, "held", self.run_object_keybinds,
+            #                                                        "selection_right", "MenuBox"],
+
+        }
+
+    def run_object_keybinds(self, value, key: str, key_type: KeyboardInput | MouseInput | GamepadInput,
+                            action_type: str, *args, **kwargs) -> None:
+        """Run the keybinds of an object.
+
+        Args:
+            value:
+                The value to check against.
+            key (str):
+                The key to check.
+            key_type (KeyboardInput | MouseInput | GamepadInput):
+                The type of key.
+            action_type (str):
+                The action type.
+            *args:
+                The arguments to give the function.
+            **kwargs:
+                The keyword arguments to give the function.
+        """
+        pass
 
     def add_object(self, screen_object: PrintableObject) -> None:
         """Add an object to this screen.
@@ -150,6 +207,7 @@ class Screen:
             if screen_object.visible and type(screen_object) is ImageBox:
                 screen_object.update_image()
 
+
     def __str__(self):
         return self._name
 
@@ -212,6 +270,28 @@ class Screen:
                 return True
         return False
 
+    @property
+    def key_bindings(self) -> dict[str, list[str, KeyboardInput | MouseInput | GamepadInput,
+                                             str, callable, tuple, dict]]:
+        """Return the key bindings of the screen.
+
+        Returns:
+            dict[str, list[str, KeyboardInput | MouseInput | GamepadInput, str, callable, tuple, dict]]:
+                The key bindings of the screen.
+        """
+        return self._key_bindings
+
+    @property
+    def disabled_key_bindings(self) -> dict[str, list[str, KeyboardInput | MouseInput | GamepadInput,
+                                                      str, callable, tuple, dict]]:
+        """Return the disabled key bindings of the screen.
+
+        Returns:
+            dict[str, list[str, KeyboardInput | MouseInput | GamepadInput, str, callable, tuple, dict]]:
+                The disabled key bindings of the screen.
+        """
+        return self._disabled_key_bindings
+
     @name.setter
     def name(self, new_name: str) -> None:
         """Set the name of the screen.
@@ -266,3 +346,27 @@ class Screen:
                 True if the screen should be refreshed, False otherwise.
         """
         self._should_refresh = new_should_refresh
+
+    @key_bindings.setter
+    def key_bindings(self, new_key_bindings: dict[str, list[str, KeyboardInput | MouseInput | GamepadInput,
+                                                            str, callable, tuple, dict]]) -> None:
+        """Set the key bindings of the screen.
+
+        Args:
+            new_key_bindings (dict[str, list[str, KeyboardInput | MouseInput | GamepadInput,
+                                             str, callable, tuple, dict]]):
+                The new key bindings of the screen.
+        """
+        self._key_bindings = new_key_bindings
+
+    @disabled_key_bindings.setter
+    def disabled_key_bindings(self, new_disabled_key_bindings: dict[str, list[str,
+                              KeyboardInput | MouseInput | GamepadInput, str, callable, tuple, dict]]) -> None:
+        """Set the disabled key bindings of the screen.
+
+        Args:
+            new_disabled_key_bindings (dict[str, list[str, KeyboardInput | MouseInput | GamepadInput,
+                                                      str, callable, tuple, dict]]):
+                The new disabled key bindings of the screen.
+        """
+        self._disabled_key_bindings = new_disabled_key_bindings

@@ -1,5 +1,8 @@
 import os
 import sys
+import time
+
+import keyboard
 
 if __name__ == "__main__":
     # This is an importer I made for all of my programs going forward, so I wouldn't have to deal with
@@ -37,24 +40,27 @@ from coordinates import Coordinate
 class TerminalManager:
     """Manage a terminal interface."""
 
-    default_color_scheme = {
-        "header": [color.YELLOW],
-        "options": [color.BLUE],
-        "footer": [color.YELLOW],
-        "keybinds": [color.BRIGHT_BLACK, color.ITALIC],
-        "selected_option": [color.BOLD, color.GREEN],
-    }
-
-    color_scheme = {}
-
     def __init__(self, window_name: str = "Jason's Terminal System",
-                 minimum_screen_size: tuple[int, int] = (5, 10)) -> None:
+                 minimum_screen_size: tuple[int, int] = (5, 10), desired_fps: int = 20) -> None:
         """Initialize the TerminalManager object.
 
         Args:
+            window_name (str, optional):
+                The name of the window.
+                Defaults to "Jason's Terminal System".
             minimum_screen_size (tuple[int, int]):
                 The minimum screen size (y, x).
+            desired_fps (int, optional):
+                The desired frames per second.
+                Defaults to 20.
         """
+        # Set up the FPS.
+        self._desired_fps = 0
+        self._frame_time = 0
+        self.desired_fps = desired_fps
+        self.start_time = time.time_ns()
+        self.loop_time = 0
+
         # Set up the window.
         os.system("title " + window_name)
 
@@ -70,23 +76,15 @@ class TerminalManager:
 
         # Calibrate the screen size.
         self.screen_size = self.get_screen_size(minimum_screen_size)
-        print("Screen size set to:", self.screen_size)
+        # print("Screen size set to:", self.screen_size)
         # input()
 
         # Set up the display.
         self.window_manager = window_manager.WindowManager(self.screen_size)
         print("Window manager initialized.")
 
-        # Set up the color scheme.
-        self.color_scheme = self.default_color_scheme
-
-        # Set up the keybinds.
-        self.keybinds = {
-            "esc": [self.quit],
-        }
-
         # Set up the mouse.
-        self.mouse_enabled = False
+        self._mouse_enabled = False
 
         self.units = Units()
 
@@ -94,18 +92,21 @@ class TerminalManager:
 
     def run_loading_animation(self) -> None:
         """Run the loading logo animation."""
-        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "SavedScreens", "loading_screen.pkl")
+        resources_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "Resources")
+        path = os.path.join(resources_path, "SavedScreens", "loading_screen.pkl")
         try:
+            raise FileNotFoundError
             loading_screen = self.window_manager.load_screen_from_file("loading", path)
             logo_box = self.window_manager.set_current_screen(loading_screen).get_object_by_name("Logo Box")
         except FileNotFoundError:
             # Set up the loading screen if the file got deleted.
             load_screen = self.window_manager.add_screen("loading")
+            animation_path = os.path.join(resources_path, "Images", "flashing_logo.AAI")
             logo_box = TObj.IMAGE_BOX(
                 "Logo Box",
                 coordinates=Coordinate(self.screen_size, -265, 0, unit_y=Units.PERCENT, unit_x=Units.PERCENT),
                 size=Coordinate(self.screen_size, 500, 100, unit_y=Units.PERCENT, unit_x=Units.PERCENT),
-                image="C:\\Users\\dafan\\OneDrive\\Desktop\\CS\\TTRPG\\D&D Assistant Programs\\utilities\\inputs\\test.AAI",
+                image=animation_path,
                 title="Logo Box", border_material=None,
                 border_color=[color.BACKGROUND_BLACK+color.BLACK],
                 title_mods=[color.UNDERLINE, color.RED, color.BACKGROUND_BLACK],
@@ -113,13 +114,16 @@ class TerminalManager:
             )
             load_screen.add_object(logo_box)
             self.window_manager.save_screen_to_file("loading", path)
+            self.window_manager.set_current_screen(load_screen)
+            pass
 
         # sleep(1)
         for i in range(45):
             self.loop()
 
             # Quit if the escape key is pressed.
-            if self.input.kb.is_newly_pressed("esc"):
+            if self.input.kb.is_newly_pressed("space") or self.input.kb.is_newly_pressed("enter") \
+                    or self.input.kb.is_newly_pressed("esc"):
                 break
 
             logo_box.coordinates = Coordinate(
@@ -135,20 +139,65 @@ class TerminalManager:
 
     def loop(self) -> None:
         """Run the main loop."""
-        self.input.check_keybinds()
+        self.start_time = time.time_ns()
+
+        self.input.update()
+        if self.input.kb.is_newly_pressed("ctrl+c") or self.input.kb.is_newly_pressed("esc"):
+            self.quit()
+        self.input.check_keybinds(self.window_manager.current_screen)
+
         self.window_manager.current_screen.run_animations()
 
+        self.handle_mouse()
+
+    def handle_mouse(self) -> None:
+        """Handle the mouse."""
+        if self.mouse_enabled:
+            cursor_pos = self.input.mouse.get_screen_char_position(self.screen_size)
+
+            if cursor_pos is not None:
+                self.window_manager.mouse.visible = True
+                new_coords = Coordinate(
+                    self.screen_size,
+                    cursor_pos[0],
+                    cursor_pos[1]
+                )
+
+            else:
+                new_coords = None
+                self.window_manager.mouse.visible = False
+            # Only update the mouse if the position has changed for efficiency.
+            if new_coords is not None and new_coords != self.window_manager.mouse.coordinates:
+                self.window_manager.mouse.coordinates = new_coords
+
+                # Check if the mouse is over any objects. Start from the back to prioritize the top-most objects.
+                for i in range(len(self.window_manager.current_screen.objects)):
+                    obj = self.window_manager.current_screen.objects[-1-i]
+                    if obj.coordinates[0] <= cursor_pos[0] < obj.coordinates[0] + obj.size[0] and \
+                            obj.coordinates[1] <= cursor_pos[1] < obj.coordinates[1] + obj.size[1] and \
+                            obj.visible and obj.name != "Mouse":
+                        obj.mouse_over = cursor_pos[0] - obj.coordinates[0], cursor_pos[1] - obj.coordinates[1]
+                        break
+                    else:
+                        obj.mouse_over = False
+
     def quit(self) -> None:
-        """Quit the program."""
+        """Quit the program. Shuts down various things to avoid bugs and weirdness after quitting."""
         self.cursor.show()
         self.cursor.set_pos()
         self.input.clear_input_buffer()
+        keyboard.release("ctrl")
+        os.system("cls")
         print(color.ERROR + "\n\nCTRL + C?! You're killing me!!! Aww, fine... Bye!" + color.END)
         sys.exit()
 
     def refresh_screen(self) -> None:
-        """Refresh the screen."""
+        """Refresh the screen and sleep any remaining time needed for maintenance of the desired FPS."""
         self.window_manager.refresh_screen()
+
+        self.loop_time = (time.time_ns() - self.start_time) / 1_000_000_000
+        if self.loop_time < self._frame_time:
+            sleep((self._frame_time - self.loop_time))
 
     def get_screen_size(self, min_screen_size: tuple[int, int]) -> tuple[int, int]:
         """Get the screen size.
@@ -163,6 +212,7 @@ class TerminalManager:
         x = 156
         y = 39
 
+        first = True
         while True:
 
             # Get input
@@ -173,6 +223,7 @@ class TerminalManager:
             finish = self.input.kb.is_newly_pressed("enter") or self.input.kb.is_newly_pressed("esc")
 
             if finish:
+                os.system("cls")
                 break
             if up:
                 y = max(y - 1, min_screen_size[0])
@@ -184,21 +235,64 @@ class TerminalManager:
                 x += 1
 
             # Print
-            self.cursor.clear_screen()
-            self.cursor.set_pos()
-            for i in range(y):
-                if i != 0:
-                    print()
-                if i == y - 1 or i == 0:
-                    print(color.YELLOW + "█"*(x-1) + color.BLUE + "█" + color.END, end="", flush=True)
-                    continue
-                print(color.GREEN + "█"*(x-1) + color.RED + "█" + color.END, end="", flush=True)
-            print("x: " + str(x) + " y: " + str(y), end="", flush=True)
+            if up or down or left or right or first:
+                self.cursor.clear_screen()
+                self.cursor.set_pos()
+                for i in range(y):
+                    if i != 0:
+                        print()
+                    if i == y - 1 or i == 0:
+                        print(color.YELLOW + "█"*(x-1) + color.BLUE + "█" + color.END, end="", flush=True)
+                        continue
+                    print(color.GREEN + "█"*(x-1) + color.RED + "█" + color.END, end="", flush=True)
+                print("x: " + str(x) + " y: " + str(y), end="", flush=True)
 
+            first = False
             # Sleep to avoid excessive speed
             sleep(0.025)
 
         return y+1, x
+
+    @property
+    def mouse_enabled(self) -> bool:
+        """Return whether the mouse is enabled.
+
+        Returns:
+            bool: Whether the mouse is enabled.
+        """
+        return self._mouse_enabled
+
+    @property
+    def desired_fps(self) -> int:
+        """Return the desired frames per second.
+
+        Returns:
+            int: The desired frames per second.
+        """
+        return self._desired_fps
+
+    @mouse_enabled.setter
+    def mouse_enabled(self, enabled: bool) -> None:
+        """Set whether the mouse is enabled.
+
+        Args:
+            enabled (bool): Whether the mouse is enabled.
+        """
+        self._mouse_enabled = enabled
+        if enabled:
+            self.window_manager.setup_mouse()
+        else:
+            self.window_manager.remove_mouse()
+
+    @desired_fps.setter
+    def desired_fps(self, fps: int) -> None:
+        """Set the desired frames per second.
+
+        Args:
+            fps (int): The desired frames per second.
+        """
+        self._desired_fps = fps
+        self._frame_time = 1 / fps
 
 
 if __name__ == "__main__":

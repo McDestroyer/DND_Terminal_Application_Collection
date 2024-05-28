@@ -45,12 +45,17 @@ class MouseInput:
         # The keys previously pressed
         self.past_key_values: dict[str | list[bool | int]] = {}
 
-        self.available_keys = ["left", "right", "middle"]
+        self.available_keys = ["left", "right", "middle", "double"]
         self.last_mouse_position = mouse.get_position()
         self.hold_delay = 0.25
 
         self.last_mouse_movement = [mouse.get_position(), time.time_ns()]
         self.mouse_visibility_delay = 5
+
+        self._past_wheel_delta = 0
+        self._wheel_delta = 0
+        self.wheel_position = 0
+        mouse.hook(self.update_wheel)
 
     def is_newly_pressed(self, key: str, function: callable or None = None) -> bool:
         """Detect if a key is pressed and return True if
@@ -258,6 +263,37 @@ class MouseInput:
                 return True
         return False
 
+    def update_wheel(self, event) -> None:
+        """Update the wheel delta.
+
+        Args:
+            event (mouse.WheelEvent):
+                The wheel event.
+        """
+        if type(event) is mouse.WheelEvent:
+            self._wheel_delta += event.delta
+            self.wheel_position += event.delta
+
+    def update_inputs(self) -> dict[str, dict[str, float]]:
+        inputs = {}
+        for button in self.available_keys:
+            inputs[button] = self.get_status(button)
+
+        wheel_delta = self.wheel_delta
+        inputs["wheel_delta"] = {
+            "pressed": wheel_delta,
+            "held": 0.0,
+            "released": 1.0 if not wheel_delta else 0.0,
+            "newly_pressed": wheel_delta if not self._past_wheel_delta else 0.0,
+            "newly_released": 1.0 if not wheel_delta and self._past_wheel_delta else 0.0,
+        }
+        inputs["wheel_pos"] = {
+            "pressed": self.wheel_position
+        }
+
+        self._past_wheel_delta = wheel_delta
+        return inputs
+
     def get_status(self, user_input: str) -> dict[str, float] | None:
         """Get the status of an input.
 
@@ -288,6 +324,7 @@ class MouseInput:
                     val = 1.0
                 else:
                     val = 0.0
+
         except ValueError:
             return None
 
@@ -340,6 +377,12 @@ class MouseInput:
 
         return status
 
+    @property
+    def wheel_delta(self):
+        data = self._wheel_delta + 0
+        self._wheel_delta = 0
+        return data
+
 
 if __name__ == "__main__":
     title = "Mouse Input Test"
@@ -349,14 +392,16 @@ if __name__ == "__main__":
     c = cursor.Cursor()
     while True:
         # print(mouse_input.get_position())
-        c.clear_screen()
+        # c.clear_screen()
 
-        # c.set_pos(0, 0)
+        c.set_pos(0, 0)
+        print(" " * 100, end="\r", flush=True)
+        print(mouse_input.update_inputs()["wheel_scroll"])
         # print(mouse_input.get_screen_char_position((40, 150)))
 
-        char = mouse_input.get_screen_char_position((40, 156))
-        c.set_pos(char[0], char[1])
-        print(char, end="", flush=True)
+        # char = mouse_input.get_screen_char_position((40, 156))
+        # c.set_pos(char[0], char[1])
+        # print(char, end="", flush=True)
 
         # print(mouse_input.last_mouse_position)
         # print(mouse_input.get_relative_position())
@@ -379,3 +424,5 @@ if __name__ == "__main__":
         # if mouse_input.is_held("middle"):
         #     print("Middle mouse button is held.")
         time.sleep(0.05)
+
+

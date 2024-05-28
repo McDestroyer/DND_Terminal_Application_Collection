@@ -39,13 +39,14 @@ class PrintableObject:
         self._z_index = z_index
         self._visible = visible
         self._should_refresh = True
+        self._mouse_over = False
 
         # Ensure the size is at least the minimum size.
         if minimum_size is None:
             self._minimum_size = (1, 1)
         else:
             self._minimum_size = minimum_size
-        if self._size._char_value_y < self._minimum_size[0] or self._size._char_value_x < self._minimum_size[1]:
+        if self._size.char_value_y < self._minimum_size[0] or self._size.char_value_x < self._minimum_size[1]:
             self._size = deepcopy(self._minimum_size)
 
         # Ensure the contents are not None.
@@ -132,6 +133,15 @@ class PrintableObject:
             bool: True if the object should be refreshed.
         """
         return self._should_refresh
+
+    @property
+    def mouse_over(self) -> bool:
+        """Return whether the mouse is over the object.
+
+        Returns:
+            bool: True if the mouse is over the object.
+        """
+        return self._mouse_over
 
     @name.setter
     def name(self, name: str) -> None:
@@ -225,7 +235,7 @@ class PrintableObject:
         self._should_refresh = True
 
     @should_refresh.setter
-    def should_refresh(self, value) -> None:
+    def should_refresh(self, value: bool) -> None:
         """Set the object to not need refreshing.
 
         Args:
@@ -233,6 +243,16 @@ class PrintableObject:
                 Whether the object should be refreshed.
         """
         self._should_refresh = value
+
+    @mouse_over.setter
+    def mouse_over(self, value: bool | tuple[int, int]) -> None:
+        """Set whether the mouse is over the object.
+
+        Args:
+            value (bool | tuple[int, int]):
+                Whether the mouse is over the object.
+        """
+        self._mouse_over = value
 
     def __str__(self) -> str:
         return f"{self._name} at {self._coordinates} with _size {self._size} and z-index {self._z_index}."

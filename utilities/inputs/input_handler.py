@@ -3,6 +3,7 @@ import sys
 from keyboard_input import KeyboardInput
 from mouse_input import MouseInput
 from gamepad_input import GamepadInput
+from screen_class import Screen
 
 
 class InputHandler:
@@ -15,8 +16,10 @@ class InputHandler:
         self.gp = GamepadInput()
         """The gamepad class."""
 
-        self.keybinds: dict[str, list[str, KeyboardInput | MouseInput | GamepadInput, str, callable, tuple, dict]] = {}
-        """The keybinds, in the form of {"name": ["key", device, "action type key", function, *args, **kwargs]} where:\n
+        # self.keybinds: dict[str, list[str, KeyboardInput | MouseInput | GamepadInput, str, callable, tuple, dict]] = {}
+        """The keybinds are in the form of\n
+        {"name": ["key", device, "action type key", function, *args, **kwargs]}\n
+        where:\n
         name is the name of the keybind,\n
         key is the key to press,\n
         device is one of the following: KeyboardInput, MouseInput, or GamepadInput,\n
@@ -24,33 +27,60 @@ class InputHandler:
         function is the function to run,\n
         and *args and **kwargs are the arguments and keyword arguments."""
 
-        self.disabled_keybinds: dict[
-            str, list[str, KeyboardInput | MouseInput | GamepadInput, str, callable, tuple, dict]
-        ] = []
+        # self.disabled_keybinds: dict[str, dict[
+        #     str, list[str, KeyboardInput | MouseInput | GamepadInput, str, callable, tuple, dict]
+        # ]] = []
 
-    def check_keybinds(self) -> None:
-        """Check the keybinds. If a keybind is pressed, run the function."""
-        for binding in self.keybinds:
-            # Check the device given in the keybind.
-            key = self.keybinds[binding][0]
-            device = self.keybinds[binding][1]
-            action_type = self.keybinds[binding][2]
-            function = self.keybinds[binding][3]
-            args = self.keybinds[binding][4]
-            kwargs = self.keybinds[binding][5]
+    def update(self) -> None:
+        """Update the inputs and store the values."""
+        self.keyboard_states = self.kb.update_inputs()
+        self.mouse_states = self.mouse.update_inputs()
+        try:
+            self.gamepad_states = self.gp.update_inputs()
+        except:
+            self.gamepad_states = None
 
-            value = device.get_status(key)[action_type]
+    def check_keybinds(self, screen: Screen) -> None:
+        """Check the keybinds. If a keybind is pressed, run the function.
 
-            # If the value is not None, run the function, giving it the value.
-            if value:
-                function(value, *args, **kwargs)
-                return
+        Args:
+            screen (Screen):
+                The screen to check the keybinds for.
+        """
+        try:
+            for binding in screen.key_bindings:
+                # Check the device given in the keybind.
+                key = screen.key_bindings[binding][0]
+                device = screen.key_bindings[binding][1]
+                action_type = screen.key_bindings[binding][2]
+                function = screen.key_bindings[binding][3]
+                args = screen.key_bindings[binding][4]
+                kwargs = screen.key_bindings[binding][5]
 
-    def add_keybind(self, binding_name: str, key: str, device: KeyboardInput | MouseInput | GamepadInput,
+                # value = device.get_status(key)[action_type]
+
+                if device == self.kb:
+                    value = self.keyboard_states[key][action_type]
+                elif device == self.mouse:
+                    value = self.mouse_states[key][action_type]
+                elif device == self.gp and self.gamepad_states is not None:
+                    value = self.gamepad_states[key][action_type]
+                else:
+                    value = None
+
+                # If the value is not None, run the function, giving it the value.
+                if value:
+                    function(value, *args, **kwargs)
+        except KeyError:
+            return None
+
+    def add_keybind(self, screen: Screen, binding_name: str, key: str, device: KeyboardInput | MouseInput | GamepadInput,
                     action_type: str, function: callable, *args, **kwargs) -> None:
         """Add a keybind.
 
         Args:
+            screen (Screen):
+                The screen to add the keybind to.
             binding_name (str):
                 The name of the keybind.
             key (str):
@@ -66,49 +96,70 @@ class InputHandler:
             **kwargs:
                 The keyword arguments to give the function.
         """
-        self.keybinds[binding_name] = [key, device, action_type, function, args, kwargs]
+        screen.key_bindings[binding_name] = [key, device, action_type, function, args, kwargs]
 
-    def remove_keybind(self, binding_name: str) -> None:
+    def remove_keybind(self, screen: Screen, binding_name: str) -> None:
         """Remove a keybind.
 
         Args:
+            screen (Screen):
+                The screen to remove the keybind from.
             binding_name (str):
                 The name of the keybind.
         """
-        self.keybinds.pop(binding_name)
+        screen.key_bindings.pop(binding_name)
 
-    def disable_keybind(self, binding_name: str) -> None:
+    def disable_keybind(self, screen: Screen, binding_name: str) -> None:
         """Disable a keybind.
 
         Args:
+            screen (Screen):
+                The screen to disable the keybind for.
             binding_name (str):
                 The name of the keybind.
         """
-        self.disabled_keybinds.update(self.keybinds.pop(binding_name))
+        screen.disabled_key_bindings.update(screen.key_bindings.pop(binding_name))
 
-    def enable_keybind(self, binding_name: str) -> None:
+    def enable_keybind(self, screen: Screen, binding_name: str) -> None:
         """Enable a keybind.
 
         Args:
+            screen (Screen):
+                The screen to enable the keybind for.
             binding_name (str):
                 The name of the keybind.
         """
-        self.keybinds.update(self.disabled_keybinds.pop(binding_name))
+        screen.key_bindings.update(screen.disabled_key_bindings.pop(binding_name))
 
-    def disable_all_keybinds(self) -> None:
-        """Disable all keybinds."""
-        self.disabled_keybinds.update(self.keybinds)
-        self.keybinds.clear()
+    def disable_all_keybinds(self, screen: Screen) -> None:
+        """Disable all keybinds.
 
-    def enable_all_keybinds(self) -> None:
-        """Enable all keybinds."""
-        self.keybinds.update(self.disabled_keybinds)
-        self.disabled_keybinds.clear()
+        Args:
+            screen (Screen):
+                The screen to disable all keybinds for.
+        """
+        screen.disabled_key_bindings.update(screen.key_bindings)
+        screen.key_bindings.clear()
 
-    def clear_keybinds(self) -> None:
-        """Clear all keybinds."""
-        self.keybinds.clear()
-        self.disabled_keybinds.clear()
+    def enable_all_keybinds(self, screen: Screen) -> None:
+        """Enable all keybinds.
+
+        Args:
+            screen (Screen):
+                The screen to enable all keybinds for.
+        """
+        screen.key_bindings.update(screen.disabled_key_bindings)
+        screen.disabled_key_bindings.clear()
+
+    def clear_keybinds(self, screen: Screen) -> None:
+        """Clear all keybinds.
+
+        Args:
+            screen (Screen):
+                The screen to clear the keybinds for.
+        """
+        screen.key_bindings.clear()
+        screen.disabled_key_bindings.clear()
 
     def clear_input_buffer(self) -> None:
         try:

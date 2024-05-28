@@ -27,6 +27,7 @@
 
     cursor_print(): Print _text at the current cursor position.
 """
+import os
 
 import color
 

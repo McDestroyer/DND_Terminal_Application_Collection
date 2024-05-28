@@ -6,8 +6,8 @@ import time
 # pylint: disable=import-error
 
 # Make sure the dependency is installed.
-import dependency_installer
-dependency_installer.install_dependency("keyboard")
+# import dependency_installer
+# dependency_installer.install_dependency("keyboard")
 
 import keyboard
 
@@ -20,6 +20,49 @@ class KeyboardInput:
         # The keys previously pressed
         self.keys = {}
         self.hold_delay = 0.25
+        # keyboard.remap_hotkey("ctrl+c", "alt+c")
+        # keyboard.remap_hotkey("ctrl+v", "alt+v")
+        # keyboard.remap_hotkey("esc", "ctrl+c", trigger_on_release=True)
+
+        self.key_list = [
+            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+            'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+            'space', 'enter', 'esc', 'tab', 'shift', 'ctrl', 'alt',
+            'backspace', 'delete', 'insert', 'home', 'end', 'pageup', 'pagedown',
+            'up', 'down', 'left', 'right',
+            # '+', '-', '*', '/', '=', '<', '>', '!', '@', '#', '$', '%', '^', '&', '|',
+            # '(', ')', '[', ']', '{', '}', ':', ';', ',', '.', '?', '_', '`', '~',
+            '`', '~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '=', '+', '[', '{', ']', '}', '\\',
+            '|', ';', ':', '\'', '"', ',', '<', '.', '>', '/', '?'
+        ]
+
+        cannon_names = list(keyboard._canonical_names.canonical_names.values())
+        for name in cannon_names:
+            if len(name) > 1 and name not in self.key_list:
+                self.key_list.append(name)
+
+        # self.update_inputs()
+
+        self.block_all()
+
+    def block_all(self) -> None:
+        """Block all keys so they don't do anything in the background by accident."""
+        keys = self.update_inputs().keys()
+        for key in keys:
+            try:
+                keyboard.block_key(key)
+            except:
+                pass
+
+    def unblock_all(self) -> None:
+        """Unblock all keys so they do something in the background."""
+        keys = self.update_inputs().keys()
+        for key in keys:
+            try:
+                keyboard.unhook_all()
+            except:
+                pass
 
     def is_newly_pressed(self, key: str, function: callable or None = None) -> bool:
         """Detect if a key is pressed and return True if
@@ -140,6 +183,16 @@ class KeyboardInput:
 
         return result
 
+    def update_inputs(self) -> dict[str, dict[str, float]]:
+        """Update the inputs."""
+        key_statuses = {}
+
+        for key in self.key_list:
+            stat = self.get_status(key)
+            if stat is not None:
+                key_statuses[key] = stat
+        return key_statuses
+
     def get_status(self, user_input: str) -> dict[str, float] | None:
         """Get the status of an input.
 
@@ -226,7 +279,13 @@ class KeyboardInput:
 if __name__ == "__main__":
     kb = KeyboardInput()
 
+    # kb.update_inputs()
+    keys = list(kb.update_inputs().keys())
+    keys.sort()
+    print(keys)
+
     while True:
+        break
         # if kb.is_newly_pressed("a"):
         #     print("a is newly pressed")
         # if kb.is_currently_pressed("a"):
@@ -235,6 +294,6 @@ if __name__ == "__main__":
         #     print("a is held")
         # if kb.get_status("a")["held"]:
         #     print(kb.get_status("a")["held"])
-        print(kb.get_status("a"))
-
-        time.sleep(0.1)
+        # print(kb.get_status("a"))
+        #
+        # time.sleep(0.1)

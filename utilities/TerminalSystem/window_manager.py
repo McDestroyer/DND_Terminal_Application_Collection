@@ -1,8 +1,11 @@
 import pickle
 
 import color
+import input_handler
+from coordinates import Coordinate
 from display import Display
 from screen_class import Screen
+from terminal_objects import TerminalObjects as TObj
 
 
 class WindowManager:
@@ -18,7 +21,7 @@ class WindowManager:
         self._screens: list[Screen] = []
         self._current_screen: Screen | None = None
 
-        # Set up the _display.
+        # Set up the display.
         self._display: Display = Display(screen_size)
 
         self._default_color_scheme = {
@@ -33,7 +36,31 @@ class WindowManager:
 
         self._color_scheme = self._default_color_scheme
 
-        # self._keybinds: dict[str, callable] = {}
+        self.mouse = None
+
+    def setup_mouse(self) -> None:
+        """Set up the mouse."""
+        self.mouse = TObj.TERMINAL_OBJECT(
+            "Mouse", coordinates=Coordinate(self.screen_size, 1, 1),
+            size=Coordinate(self.screen_size, 2, 2),
+            contents=[
+                [
+                    ["|", [color.BRIGHT_WHITE, color.UNDERLINE]],
+                    ["\\", [color.BRIGHT_WHITE, color.UNDERLINE]],
+                ],
+                [
+                    ["", [color.BRIGHT_WHITE]],
+                    ["`", [color.BRIGHT_WHITE]],
+                ],
+            ],
+            z_index=10000,
+        )
+        self.current_screen.add_object(self.mouse)
+
+    def remove_mouse(self) -> None:
+        """Remove the mouse."""
+        self.current_screen.remove_object("Mouse")
+        self.mouse = None
 
     def add_screen(self, screen_name: str) -> Screen:
         """Add a screen to the WindowManager.
@@ -124,6 +151,10 @@ class WindowManager:
             self._current_screen = screen
         else:
             self._current_screen = self.get_screen_by_name(screen)
+        if self.mouse is not None:
+            self._current_screen.add_object(self.mouse)
+        else:
+            self._current_screen.remove_object("Mouse")
         return self._current_screen
 
     def refresh_screen(self) -> None:

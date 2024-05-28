@@ -36,8 +36,30 @@ class _XboxController:
         self.gamepad_input = gamepad_input
 
         self.deadzone = 0.15
-        self.axes = {}
-        self.buttons = {}
+        self.axes = {
+            'LeftX': 0.0,
+            'LeftY': 0.0,
+            'RightX': 0.0,
+            'RightY': 0.0,
+            'LeftTrigger': 0.0,
+            'RightTrigger': 0.0,
+        }
+        self.buttons = {
+            'A': 0.0,
+            'B': 0.0,
+            'Y': 0.0,
+            'X': 0.0,
+            'LeftBumper': 0.0,
+            'RightBumper': 0.0,
+            'Back': 0.0,
+            'Start': 0.0,
+            'LeftStick': 0.0,
+            'RightStick': 0.0,
+            'DPadUp': 0.0,
+            'DPadDown': 0.0,
+            'DPadLeft': 0.0,
+            'DPadRight': 0.0,
+        }
 
         inputs = self.update_inputs()
 
@@ -121,7 +143,7 @@ class GamepadInput:
             self.gamepad = None
         return self.gamepad
 
-    def read_inputs(self) -> dict[str, float]:
+    def update_inputs(self) -> dict[str, float]:
         """Read the inputs from the gamepad and return them as a dictionary.
 
         Returns:
