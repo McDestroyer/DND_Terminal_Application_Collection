@@ -60,7 +60,9 @@ class BorderedBox(PrintableObject):
                 Whether the box is resizable by its border (replaces draggable on the bottom, left, and right sides).
                 Requires draggable to be True.
                 Defaults to False.
-
+            highlightable (bool, optional):
+                Whether the contents of the box can be highlighted.
+                Defaults to False.
         """
 
         if padding is None:
