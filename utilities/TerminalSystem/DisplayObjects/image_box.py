@@ -19,7 +19,7 @@ class ImageBox(BorderedBox):
                 # BorderedBox arguments.
                 title: str | None = None, title_mods: list[str] = None, border_color: list[str] | None = None,
                 border_material: str | None = "██", padding: tuple[int, int] | None = None, draggable: bool = False,
-                resizable: bool = False,
+                resizable: bool = False, highlightable: bool = False,
                 # ImageBox arguments.
                 image: str | list[list[list[list[str | list[str]]]]] = None, centered: bool = True,
                 shrink_to_fit: bool = True
@@ -67,6 +67,9 @@ class ImageBox(BorderedBox):
             resizable (bool, optional):
                 Whether the box is resizable by its border (replaces draggable on the bottom, left, and right sides).
                 Requires draggable to be True.
+                Defaults to False.
+            highlightable (bool, optional):
+                Whether the contents of the box can be highlighted.
                 Defaults to False.
             image (str | list[list[list[list[str | list[str]]]]]):
                 The image to display in the box. Can be a path to an image file or an image in terminal display format.
