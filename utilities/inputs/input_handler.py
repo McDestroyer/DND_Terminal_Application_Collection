@@ -3,6 +3,7 @@ import sys
 from keyboard_input import KeyboardInput
 from mouse_input import MouseInput
 from gamepad_input import GamepadInput
+from clipboard import Clipboard
 from screen_class import Screen
 
 
@@ -10,11 +11,15 @@ class InputHandler:
     """Handle mouse, keyboard, and gamepad inputs."""
     def __init__(self, window_name: str) -> None:
         self.kb = KeyboardInput()
-        """The keyboard class."""
+        """The keyboard class. Should be unused on the user side except for setting up keybinds."""
         self.mouse = MouseInput(window_name)
-        """The mouse class."""
+        """The mouse class. Should be unused on the user side except for setting up keybinds."""
         self.gp = GamepadInput()
-        """The gamepad class."""
+        """The gamepad class. Should be unused on the user side except for setting up keybinds."""
+        self.clipboard = Clipboard()
+        """The clipboard class. Allows for copying and pasting text."""
+
+        self.screen_is_focused = True
 
         # self.keybinds: dict[str, list[str, KeyboardInput | MouseInput | GamepadInput, str, callable, tuple, dict]] = {}
         """The keybinds are in the form of\n
@@ -33,11 +38,17 @@ class InputHandler:
 
     def update(self) -> None:
         """Update the inputs and store the values."""
-        self.keyboard_states = self.kb.update_inputs()
-        self.mouse_states = self.mouse.update_inputs()
-        try:
-            self.gamepad_states = self.gp.update_inputs()
-        except:
+        self.screen_is_focused = self.mouse.is_focused()
+        if self.screen_is_focused:
+            self.keyboard_states = self.kb.update_inputs()
+            self.mouse_states = self.mouse.update_inputs()
+            try:
+                self.gamepad_states = self.gp.update_inputs()
+            except:
+                self.gamepad_states = None
+        else:
+            self.keyboard_states = None
+            self.mouse_states = None
             self.gamepad_states = None
 
     def check_keybinds(self, screen: Screen) -> None:
@@ -59,9 +70,9 @@ class InputHandler:
 
                 # value = device.get_status(key)[action_type]
 
-                if device == self.kb:
+                if device == self.kb and self.keyboard_states is not None:
                     value = self.keyboard_states[key][action_type]
-                elif device == self.mouse:
+                elif device == self.mouse and self.mouse_states is not None:
                     value = self.mouse_states[key][action_type]
                 elif device == self.gp and self.gamepad_states is not None:
                     value = self.gamepad_states[key][action_type]

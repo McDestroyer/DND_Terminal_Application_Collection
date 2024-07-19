@@ -6,7 +6,7 @@ class BaseMenuOption:
     """A basic menu option."""
 
     def __init__(self, name: str, text: str, boundaries: Coordinate,  color_scheme: dict[str, list[str]] | None = None,
-                 function: callable | None = None, *args, **kwargs) -> None:
+                 function: callable or None = None, *args, **kwargs) -> None:
         """Initialize the MenuOption object.
 
         Args:

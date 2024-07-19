@@ -192,9 +192,9 @@ class Coordinate:
     def __setitem__(self, key, value):
         # self.values["CHAR"][key] = value
         if key == 0:
-            self._char_value_y = value[0]
+            self._char_value_y = value
         elif key == 1:
-            self._char_value_x = value[1]
+            self._char_value_x = value
         else:
             raise (IndexError("Index out of range."))
         self._update_values()

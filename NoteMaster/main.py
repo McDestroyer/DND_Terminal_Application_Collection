@@ -46,7 +46,7 @@ helper_directory = os.path.join(terminal_directory, "HelperObjects")
 sys.path.append(helper_directory)
 
 
-from time import sleep, time_ns
+from time import time_ns
 
 import color
 
@@ -86,7 +86,7 @@ class NoteMaster:
         """Initialize the NoteMaster object."""
 
         # Initialize the terminal.
-        self.terminal = TerminalManager("NoteMaster", (20, 50))
+        self.terminal = TerminalManager("NoteMaster", (20, 50), 100)
         self.terminal.mouse_enabled = True
 
         # Set up the screen.
@@ -99,26 +99,39 @@ class NoteMaster:
 
         self.screen = self.terminal.window_manager.current_screen
 
-        self.frame_rate = 30
-        self.frame_time = (1 / self.frame_rate) * 1_000
-
         # Set up the objects.
         box = TObj.TEXT_BOX(
             "Bob Box", coordinates=Coordinate(self.screen_size, 5, 30),
             size=Coordinate(self.screen_size, 10, 25),
             text="This is a box.\n I am happy!", title="Bob Box", border_color=[color.RED],
             title_mods=[color.UNDERLINE, color.BLUE, color.BACKGROUND_RED],
-            color_scheme=[color.BACKGROUND_DEFAULT_COLOR, color.BRIGHT_GREEN])
+            color_scheme=[color.BACKGROUND_DEFAULT_COLOR, color.BRIGHT_GREEN],
+            draggable=True,
+        )
         box2 = TObj.TEXT_BOX(
             "Bob Box 2", coordinates=Coordinate(self.screen_size, 11, 50, unit_x=Units.PERCENT),
             size=Coordinate(self.screen_size, 10, 50, unit_x=Units.PERCENT),
             text="This is another box. I am happy!", title="Bob Box 2", border_color=[color.RED],
             title_mods=[color.UNDERLINE, color.RED, color.BACKGROUND_RED],
-            color_scheme=[color.BACKGROUND_DEFAULT_COLOR, color.BRIGHT_GREEN])
+            color_scheme=[color.BACKGROUND_DEFAULT_COLOR, color.BRIGHT_GREEN],
+            draggable=True, resizable=True,
+        )
+        logo = TObj.IMAGE_BOX(
+            "Logo", coordinates=Coordinate(self.screen_size, 1, 1),
+            size=Coordinate(self.screen_size, 3, 3),
+            image=os.path.join(self.terminal.utilities_directory, "TerminalSystem", "Resources",
+                               "Images", "flashing_logo.AAI"),
+            z_index=1000,
+            title="Logo Box",
+            border_color=[color.BACKGROUND_BLACK+color.BLACK],
+            title_mods=[color.UNDERLINE, color.RED, color.BACKGROUND_BLACK],
+            draggable=True,
+        )
 
         # Add the objects to the screens.
         self.screen_dict["home"].add_object(box)
         self.screen_dict["home"].add_object(box2)
+        self.screen_dict["menu 1"].add_object(logo)
 
         self.terminal.input.add_keybind(self.screen_dict["home"], "move box up", "up", self.terminal.input.kb,
                                         "held", self.move_box, box, (-1, 0))
@@ -154,6 +167,7 @@ class NoteMaster:
 
         # box = self.screen.get_object_by_name("Bob Box")
         box2 = self.screen.get_object_by_name("Bob Box 2")
+
         past_times = []  # For debugging and timing purposes.
 
         self.screen = self.terminal.window_manager.set_current_screen("home")
@@ -161,11 +175,6 @@ class NoteMaster:
         while True:
             start_time = time_ns()
             self.terminal.loop()
-            loop_time = (time_ns() - start_time) / 1_000_000
-
-            # Quit if the escape key is pressed.
-            if self.terminal.input.kb.is_newly_pressed("esc"):
-                break
 
             # Test mouse over.
             if box2.mouse_over:
@@ -176,11 +185,9 @@ class NoteMaster:
             # Update the display.
             self.terminal.refresh_screen()
 
-            self.terminal.cursor.set_pos(0, self.screen_size[1] + 1)
-            print(" " * self.screen_size[1], end="\r", flush=False)
-            # print(logo_box.im)
+            # Track the time.
+            loop_time = (time_ns() - start_time) / 1_000_000
 
-            # loop_time = (time_ns() - start_time) / 1_000_000
             if len(past_times) > 100:
                 past_times.pop(0)
             past_times.append(loop_time)
@@ -193,14 +200,6 @@ class NoteMaster:
             print(loop_time, end=" ms ", flush=False)
             print(past_sum / len(past_times), end=" average ms\r", flush=True)
 
-            # Sleep to avoid letting the display fall behind.
-            # self.terminal.cursor.set_pos(0, self.screen_size[1] + 1)
-            # print(" " * self.screen_size[1], end="\r", flush=False)
-            # print(f"Loop: {loop_time}/{self.frame_time} ms", end=" ", flush=False)
-            # print(f"Sleeping: {self.frame_time - loop_time} ms", end="", flush=True)
-            # if loop_time < self.frame_time:
-            #     sleep((self.frame_time - loop_time) / 1_000)
-
 
 if __name__ == "__main__":
     note_master = None
@@ -209,4 +208,4 @@ if __name__ == "__main__":
         note_master.main_loop()
     # :P
     except KeyboardInterrupt:
-        note_master.terminal.quit()
+        pass

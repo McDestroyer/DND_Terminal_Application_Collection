@@ -10,12 +10,19 @@ from coordinates import Coordinate
 class TextBox(BorderedBox):
     """A generic box object."""
 
-    def __init__(self, name: str, coordinates: Coordinate, size: Coordinate, minimum_size: Coordinate | None = None,
-                 description: str | None = None, contents: list[list[list[str, list[str]]]] | None = None,
-                 z_index: int = 0, title: str | None = None, title_mods: list[str] = None,
-                 color_scheme: list[str] | None = None, border_color: list[str] | None = None,
-                 border_material: str | None = "██", text: str | None = None, center_text: bool = False,
-                 padding: tuple[int, int] | None = None) -> None:
+    def __init__(
+                self,
+                # BaseTerminalObject arguments.
+                name: str, coordinates: Coordinate, size: Coordinate, minimum_size: Coordinate | None = None,
+                description: str | None = None, contents: list[list[list[str, list[str]]]] | None = None,
+                z_index: int = 0,
+                # BorderedBox arguments.
+                title: str | None = None, title_mods: list[str] = None, border_color: list[str] | None = None,
+                border_material: str | None = "██", padding: tuple[int, int] | None = None, draggable: bool = False,
+                resizable: bool = False,
+                # TextBox arguments.
+                text: str | None = None, center_text: bool = False, color_scheme: list[str] | None = None
+            ) -> None:
         """Initialize the Box object.
 
         Args:
@@ -43,27 +50,34 @@ class TextBox(BorderedBox):
             title_mods (list[str], optional):
                 The color scheme of the title.
                 Defaults to [].
-            color_scheme (list[str], optional):
-                The color_scheme of the internals of the box.
-                Defaults to None.
             border_color (list[str], optional):
                 The color_scheme of the border.
                 Defaults to None.
             border_material (str, optional):
                 The material of the border.
                 Defaults to "██".
+            padding (tuple[int, int], optional):
+                The padding of the box.
+                Defaults to (1, 2). (y, x)
+            draggable (bool, optional):
+                Whether the box is draggable by its border.
+                Defaults to False.
+            resizable (bool, optional):
+                Whether the box is resizable by its border (replaces draggable on the bottom, left, and right sides).
+                Requires draggable to be True.
+                Defaults to False.
             text (str, optional):
                 The text to display in the box.
                 Defaults to None.
             center_text (bool, optional):
                 Whether to center the text in the box.
                 Defaults to False.
-            padding (tuple[int, int], optional):
-                The padding of the box.
-                Defaults to (1, 2). (y, x)
+            color_scheme (list[str], optional):
+                The color_scheme of the internals of the box.
+                Defaults to None.
         """
         super().__init__(name, coordinates, size, minimum_size, description, contents, z_index, title, title_mods,
-                         border_color, border_material, padding)
+                         border_color, border_material, padding, draggable, resizable)
         self._text = text
         self._center_text = center_text
 

@@ -1,7 +1,6 @@
 import pickle
 
 import color
-import input_handler
 from coordinates import Coordinate
 from display import Display
 from screen_class import Screen

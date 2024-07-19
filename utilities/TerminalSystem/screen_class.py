@@ -1,7 +1,6 @@
 import pickle
 
 import color
-import input_handler
 
 from base_terminal_object import PrintableObject
 from image_box import ImageBox
@@ -10,7 +9,7 @@ from input_handler import KeyboardInput, MouseInput, GamepadInput
 
 class Screen:
 
-    def __init__(self, screen_name: str, screen_size: tuple[int, int]) -> None:
+    def __init__(self, screen_name: str, screen_size: tuple[int, int], input_level: str = "screen") -> None:
         self._name = screen_name
         self._objects = []
         self._screen_size = screen_size
@@ -23,60 +22,23 @@ class Screen:
         ]
         self._should_refresh = True
 
+        self.input_level = input_level
+        self.input_level_options = ["screen", "object"]
+
         self._key_bindings = dict()
         self._disabled_key_bindings = dict()
 
-        self.default_keybinds = {
-
-            # MenuBox
-
-            # UP
-            "selection_up (KB_UP) [default: MenuBox]": ["up", input_handler.KeyboardInput, "held", self.run_object_keybinds,
-                                                        "selection_up", "MenuBox"],
-            "selection_up (GP_DPAD_UP) [default: MenuBox]": ["DPadUp", input_handler.GamepadInput, "held", self.run_object_keybinds,
-                                                             "selection_up", "MenuBox"],
-            # DOWN
-            "selection_down (KB_DOWN) [default: MenuBox]": ["down", input_handler.KeyboardInput, "held", self.run_object_keybinds,
-                                                            "selection_down", "MenuBox"],
-            "selection_down (GP_DPAD_DOWN) [default: MenuBox]": ["DPadDown", input_handler.GamepadInput, "held", self.run_object_keybinds,
-                                                                 "selection_down", "MenuBox"],
-            # LEFT
-            "selection_left (KB_LEFT) [default: MenuBox]": ["left", input_handler.KeyboardInput, "held", self.run_object_keybinds,
-                                                            "selection_left", "MenuBox"],
-            "selection_left (GP_DPAD_LEFT) [default: MenuBox]": ["DPadLeft", input_handler.GamepadInput, "held", self.run_object_keybinds,
-                                                                 "selection_left", "MenuBox"],
-            # RIGHT
-            "selection_right (KB_RIGHT) [default: MenuBox]": ["right", input_handler.KeyboardInput, "held", self.run_object_keybinds,
-                                                              "selection_right", "MenuBox"],
-            "selection_right (GP_DPAD_RIGHT) [default: MenuBox]": ["DPadRight", input_handler.GamepadInput, "held", self.run_object_keybinds,
-                                                                   "selection_right", "MenuBox"],
-            # # Cycle
-            # "selection_cycle (KB_TAB) [default: MenuBox]": ["right", input_handler.KeyboardInput, "held", self.run_object_keybinds,
-            #                                                   "cycle_selection", "MenuBox"],
-            # "selection_cycle (GP_DPAD_RIGHT) [default: MenuBox]": ["DPadRight", input_handler.GamepadInput, "held", self.run_object_keybinds,
-            #                                                        "selection_right", "MenuBox"],
-
-        }
-
-    def run_object_keybinds(self, value, key: str, key_type: KeyboardInput | MouseInput | GamepadInput,
-                            action_type: str, *args, **kwargs) -> None:
-        """Run the keybinds of an object.
+    def update_objects(self, object_data: dict[str, any]) -> None:
+        """Update the objects on the screen.
 
         Args:
-            value:
-                The value to check against.
-            key (str):
-                The key to check.
-            key_type (KeyboardInput | MouseInput | GamepadInput):
-                The type of key.
-            action_type (str):
-                The action type.
-            *args:
-                The arguments to give the function.
-            **kwargs:
-                The keyword arguments to give the function.
+            object_data (dict[str, any]):
+                The new data for the objects.
         """
-        pass
+        for obj in self._objects:
+            if obj.visible:
+                obj.update_object(object_data)
+        self.run_animations()
 
     def add_object(self, screen_object: PrintableObject) -> None:
         """Add an object to this screen.
@@ -206,7 +168,6 @@ class Screen:
         for screen_object in self._objects:
             if screen_object.visible and type(screen_object) is ImageBox:
                 screen_object.update_image()
-
 
     def __str__(self):
         return self._name

@@ -23,11 +23,13 @@ if __name__ == "__main__":
 # Make sure the dependency is installed.
 import dependency_installer
 dependency_installer.install_dependency("mouse")
-dependency_installer.install_dependency("pywin32")
+dependency_installer.install_dependency("win32gui")
 # dependency_installer.install_dependency("windows-curses")
 import time
 import mouse
 import win32gui
+
+from click_suppressor import Suppressor
 
 
 class MouseInput:
@@ -56,6 +58,8 @@ class MouseInput:
         self._wheel_delta = 0
         self.wheel_position = 0
         mouse.hook(self.update_wheel)
+
+        self.suppressor = Suppressor(self.get_window_rect())
 
     def is_newly_pressed(self, key: str, function: callable or None = None) -> bool:
         """Detect if a key is pressed and return True if
@@ -161,14 +165,6 @@ class MouseInput:
         self.last_mouse_position = position
         return relative_position
 
-    # def get_position(self) -> tuple[int, int]:
-    #     """Get the position of the mouse.
-    #
-    #     Returns:
-    #         tuple[int, int]: The position of the mouse.
-    #     """
-    #     return mouse.get_position()
-
     def get_screen_char_position(self, screen_char_size: tuple[int, int]) -> tuple[int, int] | None:
         """Get the CHAR coordinates of the mouse on the screen.
 
@@ -182,20 +178,24 @@ class MouseInput:
         terminal_coords = (mouse_coords[1] - window_rect["top"], mouse_coords[0] - window_rect["left"])
         window_size = (window_rect["bottom"] - window_rect["top"], window_rect["right"] - window_rect["left"])
 
-        screen_char_coords = (int(terminal_coords[0] / window_size[0] * screen_char_size[0]),
-                              int(terminal_coords[1] / window_size[1] * screen_char_size[1]))
+        screen_char_coords = [int(terminal_coords[0] / window_size[0] * screen_char_size[0]),
+                              int(terminal_coords[1] / window_size[1] * screen_char_size[1])]
 
-        if (not (window_rect["left"] <= mouse_coords[0] <= window_rect["right"]) or
-                not (window_rect["top"] <= mouse_coords[1] <= window_rect["bottom"])):
-            return None
+        screen_char_coords[0] = max(0, min(screen_char_coords[0], screen_char_size[0] - 1))
+        screen_char_coords[1] = max(0, min(screen_char_coords[1], screen_char_size[1] - 1))
+
+        # if (not (window_rect["left"] < mouse_coords[0] < window_rect["right"]) or
+        #         not (window_rect["top"] < mouse_coords[1] < window_rect["bottom"])):
+        #     return None
 
         if mouse_coords == self.last_mouse_movement[0]:
-            if time.time_ns() - self.last_mouse_movement[1] > self.mouse_visibility_delay * 1_000_000_000:
-                return None
+            # if time.time_ns() - self.last_mouse_movement[1] > self.mouse_visibility_delay * 1_000_000_000:
+            #     return None
+            pass
         else:
             self.last_mouse_movement = [mouse_coords, time.time_ns()]
 
-        return screen_char_coords
+        return screen_char_coords[0], screen_char_coords[1]
 
     def get_window_rect(self) -> dict[str, int]:
         """Get the size and position of the window.
@@ -210,12 +210,24 @@ class MouseInput:
                 # Get the window position and size
                 left, top, right, bottom = win32gui.GetWindowRect(hwnd)
                 # +40 on the top to account for the title bar.
-                return {"left": left+10, "top": top+40, "right": right-35, "bottom": bottom-30}
-                # print(f"Window position: ({left}, {top}), Size: {right - left} x {bottom - top}")
+                left += 10
+                top += 40
+                right -= 35
+                bottom -= 30
+                self.suppressor.window_rect = {"left": left, "top": top, "right": right, "bottom": bottom}
+                return {"left": left, "top": top, "right": right, "bottom": bottom}
             else:
                 print(f"Window '{self.window_name}' not found.")
         except Exception as e:
             print(f"Error: {e}")
+
+    def is_focused(self) -> bool:
+        """Check to see if the window is focused.
+
+        Returns:
+            bool: True if the window is focused. False otherwise.
+        """
+        return win32gui.GetWindowText(win32gui.GetForegroundWindow()) == self.window_name
 
     def is_currently_pressed(self, key: str, function: callable or None = None) -> bool:
         """Check to see if a key is currently pressed.
@@ -318,7 +330,11 @@ class MouseInput:
 
         # If the input is not in the list, return the empty status.
         try:
-            val = mouse.is_pressed(user_input)
+            if user_input == "left":
+                val = self.suppressor.is_clicked
+                # print(val)
+            else:
+                val = mouse.is_pressed(user_input)
             if type(val) is bool:
                 if val:
                     val = 1.0
@@ -396,7 +412,7 @@ if __name__ == "__main__":
 
         c.set_pos(0, 0)
         print(" " * 100, end="\r", flush=True)
-        print(mouse_input.update_inputs()["wheel_scroll"])
+        print(mouse.get_position())
         # print(mouse_input.get_screen_char_position((40, 150)))
 
         # char = mouse_input.get_screen_char_position((40, 156))

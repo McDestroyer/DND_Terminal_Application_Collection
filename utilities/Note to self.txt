@@ -1,0 +1,14 @@
+Screen input level:
+    Screen object manages which option is highlighted and manages inputs to change it.
+
+    Menu boxes are ordered either manually or automatically and arrow keys cycle through their options in their order.
+    Possibly allow for horizontal movement? Possibly use tab to cycle through them?
+
+Menu box:
+    Menu boxes handle the highlighting of the selected option and inputs to change it.
+
+Horizontal arrow keys to swap between menu boxes?
+
+Alert boxes which lock out the rest of the screen until they are dismissed.
+
+

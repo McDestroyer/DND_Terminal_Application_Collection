@@ -10,12 +10,20 @@ from coordinates import Coordinate
 class ImageBox(BorderedBox):
     """A generic box object."""
 
-    def __init__(self, name: str, coordinates: Coordinate, size: Coordinate,
-                 image: str | list[list[list[list[str | list[str]]]]], minimum_size: Coordinate | None = None,
-                 description: str | None = None, contents: list[list[list[str | list[str]]]] | None = None,
-                 z_index: int = 0, title: str | None = None, title_mods: list[str] = None,
-                 border_color: list[str] | None = None, border_material: str | None = "██",
-                 padding: tuple[int, int] | None = None, centered: bool = True, shrink_to_fit: bool = True) -> None:
+    def __init__(
+                self,
+                # BaseTerminalObject arguments.
+                name: str, coordinates: Coordinate, size: Coordinate, minimum_size: Coordinate | None = None,
+                description: str | None = None, contents: list[list[list[str, list[str]]]] | None = None,
+                z_index: int = 0,
+                # BorderedBox arguments.
+                title: str | None = None, title_mods: list[str] = None, border_color: list[str] | None = None,
+                border_material: str | None = "██", padding: tuple[int, int] | None = None, draggable: bool = False,
+                resizable: bool = False,
+                # ImageBox arguments.
+                image: str | list[list[list[list[str | list[str]]]]] = None, centered: bool = True,
+                shrink_to_fit: bool = True
+            ) -> None:
         """Initialize the Image Box object.
 
         Args:
@@ -25,8 +33,6 @@ class ImageBox(BorderedBox):
                 The coordinates of the box.
             size (Coordinate):
                 The size of the box.
-            image (str | list[list[list[list[str | list[str]]]]]):
-                The image to display in the box. Can be a path to an image file or an image in terminal display format.
             minimum_size (Coordinate, optional):
                 The minimum size of the box. Intended for use when one or both of the axes use percentages.
                 Overridden when the image size is larger than the minimum size.
@@ -55,6 +61,15 @@ class ImageBox(BorderedBox):
             padding (tuple[int, int], optional):
                 The padding of the box.
                 Defaults to (1, 2). (y, x)
+            draggable (bool, optional):
+                Whether the box is draggable by its border.
+                Defaults to False.
+            resizable (bool, optional):
+                Whether the box is resizable by its border (replaces draggable on the bottom, left, and right sides).
+                Requires draggable to be True.
+                Defaults to False.
+            image (str | list[list[list[list[str | list[str]]]]]):
+                The image to display in the box. Can be a path to an image file or an image in terminal display format.
             centered (bool, optional):
                 Whether the contents of the box should be centered.
                 Defaults to True.
@@ -63,7 +78,7 @@ class ImageBox(BorderedBox):
                 Defaults to True.
         """
         super().__init__(name, coordinates, size, minimum_size, description, contents, z_index, title, title_mods,
-                         border_color, border_material, padding)
+                         border_color, border_material, padding, draggable, resizable)
         self._centered = centered
         self._shrink_to_fit = shrink_to_fit
 
@@ -73,10 +88,16 @@ class ImageBox(BorderedBox):
         self._base_colors = ""
 
         self._current_frame = 0
-        self._last_update = time_ns()
+        self._animation_start_time = time_ns()
 
-        self.image = self.get_image(image)
-        self.update_image()
+        if image is None:
+            self.image = [
+                [
+                    [" ", [color.BACKGROUND_DEFAULT_COLOR]] * self._minimum_size[1]
+                ] * self._minimum_size[0]
+            ]
+
+        self.image = image
 
     def get_image(self, image: str | list[list[list[list[str | list[str]]]]]) -> (
             list)[list[list[list[str | list[str]]]]]:
@@ -179,10 +200,15 @@ class ImageBox(BorderedBox):
 
     def update_image(self) -> None:
         """Update the image to the next frame."""
-        if self._image_frames > 1 and time_ns() - self._last_update >= self._frame_time * 1_000_000_000:
-            self._current_frame = (self._current_frame + 1) % self._image_frames
-            self._last_update = time_ns()
-        self.display_image(self._image[self._current_frame])
+        if self._image_frames > 1:
+            # time_since_start = time_ns() - self._animation_start_time
+            # frame_time_ns = self._frame_time * 1_000_000_000
+            # frame_since_start = time_since_start // frame_time_ns
+            # current_frame = int(frame_since_start % self._image_frames)
+            current_frame = int(((time_ns() - self._animation_start_time) // (self._frame_time * 1_000_000_000)) % self._image_frames)
+            if current_frame != self._current_frame or current_frame == 0:
+                self._current_frame = current_frame
+                self.display_image(self._image[self._current_frame])
 
     def display_image(self, image: list[list[list[str | list[str]]]]) -> None:
         """Display the image in the box.
@@ -224,6 +250,16 @@ class ImageBox(BorderedBox):
         self._should_refresh = True
         # self.apply_border()
 
+    def update_object(self, data: dict[str, any]) -> None:
+        """Update the object with new controller inputs.
+
+        Args:
+            data (dict[str, any]):
+                The data to update the object with.
+        """
+        super().update_object(data)
+        # self.update_image()
+
     @property
     def image(self) -> list[list[list[str | list[str]]]] | None:
         return self._image
@@ -245,7 +281,7 @@ class ImageBox(BorderedBox):
                 min_size = Coordinate(self.coordinates.screen_size, y_size, x_size)
         self.minimum_size = min_size
         self._current_frame = 0
-        self._last_update = time_ns()
+        self._animation_start_time = time_ns()
         self.update_image()
 
     @property
@@ -270,7 +306,7 @@ class ImageBox(BorderedBox):
 
     @property
     def last_update(self) -> int:
-        return self._last_update
+        return self._animation_start_time
 
     @property
     def minimum_size(self) -> Coordinate:

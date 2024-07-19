@@ -2,8 +2,6 @@ import os
 import sys
 import time
 
-import keyboard
-
 if __name__ == "__main__":
     # This is an importer I made for all of my programs going forward, so I wouldn't have to deal with
     # creating and renaming the utilities files for every program or have to deal with learning the "correct" methods.
@@ -40,16 +38,17 @@ from coordinates import Coordinate
 class TerminalManager:
     """Manage a terminal interface."""
 
-    def __init__(self, window_name: str = "Jason's Terminal System",
-                 minimum_screen_size: tuple[int, int] = (5, 10), desired_fps: int = 20) -> None:
+    def __init__(self, window_name: str = "Jason's Terminal System", minimum_screen_size: tuple[int, int] = (5, 10),
+                 desired_fps: int = 20) -> None:
         """Initialize the TerminalManager object.
 
         Args:
             window_name (str, optional):
                 The name of the window.
                 Defaults to "Jason's Terminal System".
-            minimum_screen_size (tuple[int, int]):
+            minimum_screen_size (tuple[int, int], optional):
                 The minimum screen size (y, x).
+                Defaults to (5, 10).
             desired_fps (int, optional):
                 The desired frames per second.
                 Defaults to 20.
@@ -60,6 +59,7 @@ class TerminalManager:
         self.desired_fps = desired_fps
         self.start_time = time.time_ns()
         self.loop_time = 0
+        self.utilities_directory = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
         # Set up the window.
         os.system("title " + window_name)
@@ -68,7 +68,7 @@ class TerminalManager:
         self.input = InputHandler(window_name)
         print("Input initialized.")
 
-        # Set up the cursor.
+        # Set up the display cursor.
         self.cursor = cursor_manager.Cursor()
         self.cursor.hide()
         self.cursor.clear_screen()
@@ -76,8 +76,55 @@ class TerminalManager:
 
         # Calibrate the screen size.
         self.screen_size = self.get_screen_size(minimum_screen_size)
-        # print("Screen size set to:", self.screen_size)
-        # input()
+
+        self.default_color_scheme = {
+            "base": {
+                "highlight": [color.BACKGROUND_BRIGHT_BLACK],
+                "text": [color.BRIGHT_GREEN, color.BACKGROUND_DEFAULT_COLOR],
+            },
+            "bordered_box": {
+                "title": [color.BLACK, color.UNDERLINE, color.RED],
+                "border": [color.RED, color.BACKGROUND_BLACK],
+            },
+            "menu_box": {
+                "title": [color.BLACK, color.UNDERLINE, color.RED],
+                "border": [color.RED, color.BACKGROUND_BLACK],
+                "text": [color.BRIGHT_WHITE, color.BACKGROUND_BLACK],
+                "option": [color.BRIGHT_GREEN, color.BACKGROUND_BLACK],
+                "selected_option": [color.INVERSE],
+            },
+            "image_box": {
+                "title": [color.BLACK, color.UNDERLINE, color.RED],
+                "border": [color.RED, color.BACKGROUND_BLACK],
+            },
+            "text_box": {
+                "title": [color.BLACK, color.UNDERLINE, color.RED],
+                "border": [color.RED, color.BACKGROUND_BLACK],
+                "text": [color.BRIGHT_WHITE, color.BACKGROUND_BLACK],
+            },
+            "menu_text_input": {
+                "title": [color.BLACK, color.UNDERLINE, color.RED],
+                "border": [color.RED, color.BACKGROUND_BLACK],
+                "text": [color.BRIGHT_WHITE, color.BACKGROUND_BLACK],
+                "cursor": [color.BRIGHT_WHITE, color.BACKGROUND_BLACK],
+                "empty": [color.BRIGHT_WHITE, color.BACKGROUND_BLACK],
+            },
+            "menu_button": {
+                "title": [color.BLACK, color.UNDERLINE, color.RED],
+                "border": [color.RED, color.BACKGROUND_BLACK],
+                "text": [color.BRIGHT_WHITE, color.BACKGROUND_BLACK],
+            },
+            "menu_slider": {
+                "title": [color.BLACK, color.UNDERLINE, color.RED],
+                "border": [color.RED, color.BACKGROUND_BLACK],
+                "text": [color.BRIGHT_WHITE, color.BACKGROUND_BLACK],
+                "slider": [color.BRIGHT_WHITE, color.BACKGROUND_BLACK],
+            },
+            "menu_option": {
+                "text": [color.BRIGHT_WHITE, color.BACKGROUND_BLACK],
+                "highlight": [color.BRIGHT_GREEN, color.BACKGROUND_BLACK],
+            },
+        }
 
         # Set up the display.
         self.window_manager = window_manager.WindowManager(self.screen_size)
@@ -85,6 +132,7 @@ class TerminalManager:
 
         # Set up the mouse.
         self._mouse_enabled = False
+        self._highlighted_object = None
 
         self.units = Units()
 
@@ -92,10 +140,11 @@ class TerminalManager:
 
     def run_loading_animation(self) -> None:
         """Run the loading logo animation."""
-        resources_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "Resources")
+        resources_path = os.path.join(self.utilities_directory, "TerminalSystem", "Resources")
         path = os.path.join(resources_path, "SavedScreens", "loading_screen.pkl")
         try:
             raise FileNotFoundError
+            # TODO When done modifying base principles, let it load the animation rather than generating it every time.
             loading_screen = self.window_manager.load_screen_from_file("loading", path)
             logo_box = self.window_manager.set_current_screen(loading_screen).get_object_by_name("Logo Box")
         except FileNotFoundError:
@@ -122,8 +171,12 @@ class TerminalManager:
             self.loop()
 
             # Quit if the escape key is pressed.
-            if self.input.kb.is_newly_pressed("space") or self.input.kb.is_newly_pressed("enter") \
-                    or self.input.kb.is_newly_pressed("esc"):
+            # if self.input.kb.is_newly_pressed("space") or self.input.kb.is_newly_pressed("enter") \
+            #         or self.input.kb.is_newly_pressed("esc"):
+            if self.input.keyboard_states["space"]["newly_pressed"] or \
+                    self.input.keyboard_states["enter"]["newly_pressed"] or \
+                    self.input.keyboard_states["esc"]["newly_pressed"]:
+                self.refresh_screen()
                 break
 
             logo_box.coordinates = Coordinate(
@@ -141,18 +194,31 @@ class TerminalManager:
         """Run the main loop."""
         self.start_time = time.time_ns()
 
+        # Update the inputs.
         self.input.update()
-        if self.input.kb.is_newly_pressed("ctrl+c") or self.input.kb.is_newly_pressed("esc"):
+        if self.input.keyboard_states["esc"]["newly_pressed"]:
             self.quit()
         self.input.check_keybinds(self.window_manager.current_screen)
 
-        self.window_manager.current_screen.run_animations()
-
+        # Handle the mouse, applying hovered and dragged effects.
         self.handle_mouse()
+        # Handle text highlighting.
+        self.handle_highlighting()
+
+        # Update the objects with the new input data and any other data I decide to add later.
+        # This is called after handling the mouse so that the objects have up-to-date mouse_over values.
+        object_data = {
+            "mouse_pos": self.input.mouse.get_screen_char_position(self.screen_size),
+            "mouse_inputs": self.input.mouse_states,
+            "keyboard_inputs": self.input.keyboard_states,
+            "gamepad_inputs": self.input.gamepad_states,
+        }
+        self.window_manager.current_screen.update_objects(object_data)
 
     def handle_mouse(self) -> None:
         """Handle the mouse."""
         if self.mouse_enabled:
+            # Move the cursor to the mouse position.
             cursor_pos = self.input.mouse.get_screen_char_position(self.screen_size)
 
             if cursor_pos is not None:
@@ -162,7 +228,7 @@ class TerminalManager:
                     cursor_pos[0],
                     cursor_pos[1]
                 )
-
+            # If the mouse is off the screen, hide it.
             else:
                 new_coords = None
                 self.window_manager.mouse.visible = False
@@ -171,25 +237,37 @@ class TerminalManager:
                 self.window_manager.mouse.coordinates = new_coords
 
                 # Check if the mouse is over any objects. Start from the back to prioritize the top-most objects.
+                hovered = False
                 for i in range(len(self.window_manager.current_screen.objects)):
                     obj = self.window_manager.current_screen.objects[-1-i]
                     if obj.coordinates[0] <= cursor_pos[0] < obj.coordinates[0] + obj.size[0] and \
                             obj.coordinates[1] <= cursor_pos[1] < obj.coordinates[1] + obj.size[1] and \
-                            obj.visible and obj.name != "Mouse":
+                            obj.visible and obj.name != "Mouse" and not hovered:
                         obj.mouse_over = cursor_pos[0] - obj.coordinates[0], cursor_pos[1] - obj.coordinates[1]
-                        break
                     else:
                         obj.mouse_over = False
+
+    def handle_highlighting(self) -> None:
+        """Handle highlighting."""
+        # TODO This changes the hovered object but not the highlighted one properly and may interfere with highlighting.
+        for obj in self.window_manager.current_screen.objects:
+            if obj.mouse_over:
+                if self.highlighted_object is not None and obj != self.highlighted_object:
+                    self.highlighted_object.mouse_over = False
+                    self.highlighted_object = obj
+                    break
+            elif self.highlighted_object is not None and obj == self.highlighted_object:
+                self.highlighted_object = None
 
     def quit(self) -> None:
         """Quit the program. Shuts down various things to avoid bugs and weirdness after quitting."""
         self.cursor.show()
         self.cursor.set_pos()
         self.input.clear_input_buffer()
-        keyboard.release("ctrl")
+        self.input.kb.release("ctrl")
         os.system("cls")
         print(color.ERROR + "\n\nCTRL + C?! You're killing me!!! Aww, fine... Bye!" + color.END)
-        sys.exit()
+        raise KeyboardInterrupt
 
     def refresh_screen(self) -> None:
         """Refresh the screen and sleep any remaining time needed for maintenance of the desired FPS."""
@@ -209,6 +287,9 @@ class TerminalManager:
         Returns:
             tuple[int, int]: The screen size (y, x).
         """
+        # Clear the screen.
+        os.system("cls")
+
         x = 156
         y = 39
 
@@ -271,6 +352,15 @@ class TerminalManager:
         """
         return self._desired_fps
 
+    @property
+    def highlighted_object(self) -> TObj.TERMINAL_OBJECT | None:
+        """Return the object containing highlighted text.
+
+        Returns:
+            TObj.TERMINAL_OBJECT | None: The object containing highlighted text.
+        """
+        return self._highlighted_object
+
     @mouse_enabled.setter
     def mouse_enabled(self, enabled: bool) -> None:
         """Set whether the mouse is enabled.
@@ -293,6 +383,18 @@ class TerminalManager:
         """
         self._desired_fps = fps
         self._frame_time = 1 / fps
+
+    @highlighted_object.setter
+    def highlighted_object(self, obj: TObj.TERMINAL_OBJECT | None) -> None:
+        """Set the object containing highlighted text.
+
+        Args:
+            obj (TObj.TERMINAL_OBJECT | None): The object containing highlighted text.
+        """
+        for obj in self.window_manager.current_screen.objects:
+            if obj != self._highlighted_object:
+                obj.highlighting = False
+        self._highlighted_object = obj
 
 
 if __name__ == "__main__":

@@ -41,9 +41,15 @@ class PrintableObject:
         self._should_refresh = True
         self._mouse_over = False
 
+        # Highlighting variables. Mostly used for later objects.
+        self._highlighting = False
+        self._highlighting_start = None
+        self._highlighting_end = None
+        self._highlighted_text = None
+
         # Ensure the size is at least the minimum size.
         if minimum_size is None:
-            self._minimum_size = (1, 1)
+            self._minimum_size = Coordinate(self._coordinates.screen_size, 1, 1)
         else:
             self._minimum_size = minimum_size
         if self._size.char_value_y < self._minimum_size[0] or self._size.char_value_x < self._minimum_size[1]:
@@ -52,6 +58,17 @@ class PrintableObject:
         # Ensure the contents are not None.
         if self._contents is None:
             self._contents = [[[" ", []] for _ in range(self._size[1])] for _ in range(self._size[0])]
+
+    def update_object(self, data: dict[str, any]) -> None:
+        """Update the object with new controller inputs.
+
+        Args:
+            data (dict[str, any]):
+                The data to update the object with.
+        """
+        for key in data.keys():
+            if hasattr(self, key):
+                setattr(self, key, data[key])
 
     @property
     def name(self) -> str:
@@ -135,13 +152,49 @@ class PrintableObject:
         return self._should_refresh
 
     @property
-    def mouse_over(self) -> bool:
+    def mouse_over(self) -> bool | tuple[int, int]:
         """Return whether the mouse is over the object.
 
         Returns:
             bool: True if the mouse is over the object.
         """
         return self._mouse_over
+
+    @property
+    def highlighting(self) -> bool:
+        """Return whether the object is highlighted.
+
+        Returns:
+            bool: True if the object is highlighted.
+        """
+        return self._highlighting
+
+    @property
+    def highlighting_start(self) -> tuple[int, int] | None:
+        """Return the start of the highlighting.
+
+        Returns:
+            tuple[int, int] | None: The start of the highlighting.
+        """
+        return self._highlighting_start
+
+    @property
+    def highlighting_end(self) -> tuple[int, int] | None:
+        """Return the end of the highlighting.
+
+        Returns:
+            tuple[int, int] | None: The end of the highlighting.
+        """
+        return self._highlighting_end
+
+    @property
+    def highlighted_text(self) -> list[list[list[str | list[str]]]] | None:
+        """Return the highlighted text.
+
+        Returns:
+            list[list[list[str | list[str]]]] | None: The highlighted text.
+        """
+        return self._highlighted_text
 
     @name.setter
     def name(self, name: str) -> None:
@@ -153,6 +206,18 @@ class PrintableObject:
         """
         self._name = name
 
+    def move(self, coordinates: Coordinate) -> None:
+        """Move the object. Used bc python was being dumb.
+
+        Args:
+            coordinates (Coordinate):
+                The new position of the object.
+        """
+        if self._coordinates == coordinates:
+            return
+        self._coordinates = coordinates
+        self._should_refresh = True
+
     @coordinates.setter
     def coordinates(self, coordinates: Coordinate) -> None:
         """Set the coordinates of the object.
@@ -161,7 +226,25 @@ class PrintableObject:
             coordinates (Coordinate):
                 The new coordinates of the object.
         """
+        if self._coordinates == coordinates:
+            return
         self._coordinates = coordinates
+        self._should_refresh = True
+
+    def resize(self, size: Coordinate) -> None:
+        """Set the size of the object. Used bc python was being dumb.
+
+        Args:
+            size (Coordinate):
+                The new size of the object.
+        """
+        if self._size == size:
+            return
+        self._size = Coordinate(
+            self._coordinates.screen_size,
+            max(size.values["CHAR"][0], self._minimum_size.values["CHAR"][0]),
+            max(size.values["CHAR"][1], self._minimum_size.values["CHAR"][1])
+        )
         self._should_refresh = True
 
     @size.setter
@@ -172,11 +255,14 @@ class PrintableObject:
             size (Coordinate):
                 The new size of the object.
         """
+        if self._size == size:
+            return
         self._size = Coordinate(
             self._coordinates.screen_size,
             max(size.values["CHAR"][0], self._minimum_size.values["CHAR"][0]),
             max(size.values["CHAR"][1], self._minimum_size.values["CHAR"][1])
         )
+        self._should_refresh = True
 
     @minimum_size.setter
     def minimum_size(self, minimum_size: Coordinate) -> None:
@@ -253,6 +339,20 @@ class PrintableObject:
                 Whether the mouse is over the object.
         """
         self._mouse_over = value
+
+    @highlighting.setter
+    def highlighting(self, value: bool) -> None:
+        """Set whether the object is highlighted.
+
+        Args:
+            value (bool):
+                Whether the object is highlighted.
+        """
+        self._highlighting = value
+        if not value:
+            self._highlighting_start = None
+            self._highlighting_end = None
+            self._highlighted_text = None
 
     def __str__(self) -> str:
         return f"{self._name} at {self._coordinates} with _size {self._size} and z-index {self._z_index}."

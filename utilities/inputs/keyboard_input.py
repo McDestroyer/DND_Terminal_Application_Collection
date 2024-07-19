@@ -6,8 +6,8 @@ import time
 # pylint: disable=import-error
 
 # Make sure the dependency is installed.
-# import dependency_installer
-# dependency_installer.install_dependency("keyboard")
+import dependency_installer
+dependency_installer.install_dependency("keyboard")
 
 import keyboard
 
@@ -20,9 +20,6 @@ class KeyboardInput:
         # The keys previously pressed
         self.keys = {}
         self.hold_delay = 0.25
-        # keyboard.remap_hotkey("ctrl+c", "alt+c")
-        # keyboard.remap_hotkey("ctrl+v", "alt+v")
-        # keyboard.remap_hotkey("esc", "ctrl+c", trigger_on_release=True)
 
         self.key_list = [
             'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
@@ -31,8 +28,15 @@ class KeyboardInput:
             'space', 'enter', 'esc', 'tab', 'shift', 'ctrl', 'alt',
             'backspace', 'delete', 'insert', 'home', 'end', 'pageup', 'pagedown',
             'up', 'down', 'left', 'right',
-            # '+', '-', '*', '/', '=', '<', '>', '!', '@', '#', '$', '%', '^', '&', '|',
-            # '(', ')', '[', ']', '{', '}', ':', ';', ',', '.', '?', '_', '`', '~',
+            '`', '~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '=', '+', '[', '{', ']', '}', '\\',
+            '|', ';', ':', '\'', '"', ',', '<', '.', '>', '/', '?'
+        ]
+
+        self.blockable_keys = [
+            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+            'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+            'space', 'enter', 'tab', 'up', 'down', 'left', 'right',
             '`', '~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '=', '+', '[', '{', ']', '}', '\\',
             '|', ';', ':', '\'', '"', ',', '<', '.', '>', '/', '?'
         ]
@@ -42,13 +46,11 @@ class KeyboardInput:
             if len(name) > 1 and name not in self.key_list:
                 self.key_list.append(name)
 
-        # self.update_inputs()
-
         self.block_all()
 
     def block_all(self) -> None:
-        """Block all keys so they don't do anything in the background by accident."""
-        keys = self.update_inputs().keys()
+        """Block all keys so that they don't do anything in the background by accident."""
+        keys = self.blockable_keys
         for key in keys:
             try:
                 keyboard.block_key(key)
@@ -56,11 +58,11 @@ class KeyboardInput:
                 pass
 
     def unblock_all(self) -> None:
-        """Unblock all keys so they do something in the background."""
+        """Unblock all keys so that they do something in the background."""
         keys = self.update_inputs().keys()
         for key in keys:
             try:
-                keyboard.unhook_all()
+                keyboard.unblock_key(key)
             except:
                 pass
 
@@ -191,6 +193,14 @@ class KeyboardInput:
             stat = self.get_status(key)
             if stat is not None:
                 key_statuses[key] = stat
+            else:
+                key_statuses[key] = {
+                    "pressed": 0.0,
+                    "held": 0.0,
+                    "released": 0.0,
+                    "newly_pressed": 0.0,
+                    "newly_released": 0.0,
+                }
         return key_statuses
 
     def get_status(self, user_input: str) -> dict[str, float] | None:
@@ -223,6 +233,8 @@ class KeyboardInput:
                     val = 1.0
                 else:
                     val = 0.0
+            elif val is None or user_input not in self.key_list:
+                return None
         except ValueError:
             return None
 
@@ -275,6 +287,15 @@ class KeyboardInput:
 
         return status
 
+    def release(self, key: str) -> None:
+        """Release a key.
+
+        Args:
+            key (str):
+                The key to release.
+        """
+        keyboard.release(key)
+
 
 if __name__ == "__main__":
     kb = KeyboardInput()
@@ -283,6 +304,9 @@ if __name__ == "__main__":
     keys = list(kb.update_inputs().keys())
     keys.sort()
     print(keys)
+    time.sleep(2)
+    kb.unblock_all()
+    time.sleep(10)
 
     while True:
         break

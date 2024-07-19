@@ -17,7 +17,6 @@ Desc: Pong game.
 # pylint: disable=undefined-variable
 # pylint: disable=wrong-import-position
 # pylint: disable=import-error
-# pylint: disable=
 
 # This is an importer I made for all of my programs going forward, so I wouldn't have to deal with
 # creating and renaming the utilities files for every program or have to deal with learning the "correct" methods.
@@ -45,8 +44,6 @@ sys.path.append(menu_directory)
 helper_directory = os.path.join(terminal_directory, "HelperObjects")
 sys.path.append(helper_directory)
 
-
-from time import sleep, time_ns
 
 import color
 
@@ -118,7 +115,7 @@ class System:
         ball = self.screen.get_object_by_name("Bob Box 2")
         score = self.screen.get_object_by_name("Score")
 
-        ball_velocity = [0, 1]
+        ball_velocity = [.5, 1]
         ball_position = [ball.coordinates.char_value_y, ball.coordinates.char_value_x]
         paddle_speed = 1
         score_values = [0, 0]
@@ -204,11 +201,6 @@ class System:
             )
 
             self.terminal.refresh_screen()
-
-            self.terminal.cursor.set_pos(self.screen_size[1] + 1, 0)
-            print(" " * self.screen_size[1], end="\r", flush=False)
-            print(f"Ball: {ball_position} | {ball_velocity}", end="", flush=False)
-            print(f"Right Paddle: {right_paddle.coordinates.char_value_y}", end="", flush=True)
 
 
 if __name__ == "__main__":
