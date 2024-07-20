@@ -10,5 +10,3 @@ Menu box:
 Horizontal arrow keys to swap between menu boxes?
 
 Alert boxes which lock out the rest of the screen until they are dismissed.
-
-

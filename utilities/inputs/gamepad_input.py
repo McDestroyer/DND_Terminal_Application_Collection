@@ -70,10 +70,13 @@ class _XboxController:
             self.past_inputs[button] = [inputs[button], 0]
             self.toggle_buttons[button] = False
 
-    def update_inputs(self, update_gamepad: bool = False) -> dict[str, float]:
+    def update_inputs(self, highlighted: bool = True, update_gamepad: bool = False) -> dict[str, float]:
         """Update the inputs from the gamepad and return them as a dictionary.
 
         Args:
+            highlighted (bool, optional):
+                Whether the window is highlighted. If False, all inputs should be False.
+                Defaults to True.
             update_gamepad (bool, optional):
                 Whether to update the gamepad if it was disconnected. False by default because of memory leak issues and
                 the fact that if it were run without a controller it prints out a lot of errors I can't stop.
@@ -112,6 +115,12 @@ class _XboxController:
             'DPadRight': 1.0 if btns.ABS_HAT0X.value == 1 else 0.0,
         }
 
+        if not highlighted:
+            for item in self.buttons:
+                self.buttons[item] = 0.0
+            for item in self.axes:
+                self.axes[item] = 0.0
+
         return self.axes | self.buttons
 
 
@@ -143,13 +152,18 @@ class GamepadInput:
             self.gamepad = None
         return self.gamepad
 
-    def update_inputs(self) -> dict[str, float]:
+    def update_inputs(self, highlighted: bool = True) -> dict[str, float]:
         """Read the inputs from the gamepad and return them as a dictionary.
+
+        Args:
+            highlighted (bool, optional):
+                Whether the window is highlighted. If False, all inputs should be False.
+                Defaults to True.
 
         Returns:
             dict[str, float]: A dictionary containing the inputs from the gamepad.
         """
-        return self.controller.update_inputs()
+        return self.controller.update_inputs(highlighted)
 
     def list_axes(self) -> list[str]:
         """List the available axes.

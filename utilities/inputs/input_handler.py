@@ -20,6 +20,14 @@ class InputHandler:
         """The clipboard class. Allows for copying and pasting text."""
 
         self.screen_is_focused = True
+        """Whether the screen is focused or not."""
+
+        self.keyboard_states = None
+        """The keyboard states."""
+        self.mouse_states = None
+        """The mouse states."""
+        self.gamepad_states = None
+        """The gamepad states."""
 
         # self.keybinds: dict[str, list[str, KeyboardInput | MouseInput | GamepadInput, str, callable, tuple, dict]] = {}
         """The keybinds are in the form of\n
@@ -39,16 +47,12 @@ class InputHandler:
     def update(self) -> None:
         """Update the inputs and store the values."""
         self.screen_is_focused = self.mouse.is_focused()
-        if self.screen_is_focused:
-            self.keyboard_states = self.kb.update_inputs()
-            self.mouse_states = self.mouse.update_inputs()
-            try:
-                self.gamepad_states = self.gp.update_inputs()
-            except:
-                self.gamepad_states = None
-        else:
-            self.keyboard_states = None
-            self.mouse_states = None
+
+        self.keyboard_states = self.kb.update_inputs(self.screen_is_focused)
+        self.mouse_states = self.mouse.update_inputs(self.screen_is_focused)
+        try:
+            self.gamepad_states = self.gp.update_inputs(self.screen_is_focused)
+        except:
             self.gamepad_states = None
 
     def check_keybinds(self, screen: Screen) -> None:

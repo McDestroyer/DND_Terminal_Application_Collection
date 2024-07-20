@@ -286,10 +286,29 @@ class MouseInput:
             self._wheel_delta += event.delta
             self.wheel_position += event.delta
 
-    def update_inputs(self) -> dict[str, dict[str, float]]:
+    def update_inputs(self, highlighted: bool = True) -> dict[str, dict[str, float]]:
+        """Update the inputs and return the values.
+
+        Args:
+            highlighted (bool, optional):
+                Whether the window is highlighted. If False, all inputs should be False.
+                Defaults to True.
+
+        Returns:
+            dict[str, dict[str, float]]: The inputs.
+        """
         inputs = {}
         for button in self.available_keys:
-            inputs[button] = self.get_status(button)
+            if highlighted:
+                inputs[button] = self.get_status(button)
+            else:
+                inputs[button] = {
+                    "pressed": 0.0,
+                    "held": 0.0,
+                    "released": 0.0,
+                    "newly_pressed": 0.0,
+                    "newly_released": 0.0,
+                }
 
         wheel_delta = self.wheel_delta
         inputs["wheel_delta"] = {

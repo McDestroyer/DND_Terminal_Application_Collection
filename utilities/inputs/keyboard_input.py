@@ -185,13 +185,19 @@ class KeyboardInput:
 
         return result
 
-    def update_inputs(self) -> dict[str, dict[str, float]]:
-        """Update the inputs."""
+    def update_inputs(self, highlighted: bool = True) -> dict[str, dict[str, float]]:
+        """Update the inputs.
+
+        Args:
+            highlighted (bool, optional):
+                Whether the window is highlighted. If False, all inputs should be False.
+                Defaults to True.
+        """
         key_statuses = {}
 
         for key in self.key_list:
             stat = self.get_status(key)
-            if stat is not None:
+            if stat is not None or highlighted is False:
                 key_statuses[key] = stat
             else:
                 key_statuses[key] = {

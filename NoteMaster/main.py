@@ -46,7 +46,7 @@ helper_directory = os.path.join(terminal_directory, "HelperObjects")
 sys.path.append(helper_directory)
 
 
-from time import time_ns
+from time import time_ns, sleep
 
 import color
 
@@ -86,7 +86,7 @@ class NoteMaster:
         """Initialize the NoteMaster object."""
 
         # Initialize the terminal.
-        self.terminal = TerminalManager("NoteMaster", (20, 50), 100)
+        self.terminal = TerminalManager("NoteMaster", (20, 50), 20)
         self.terminal.mouse_enabled = True
 
         # Set up the screen.
@@ -116,6 +116,14 @@ class NoteMaster:
             color_scheme=[color.BACKGROUND_DEFAULT_COLOR, color.BRIGHT_GREEN],
             draggable=True, resizable=True,
         )
+        box3 = TObj.TEXT_BOX(
+            "Bob Box 3", coordinates=Coordinate(self.screen_size, 25, 25, unit_x=Units.PERCENT),
+            size=Coordinate(self.screen_size, 10, 25, unit_x=Units.PERCENT),
+            text="", title="Bob Box 3", border_color=[color.RED],
+            title_mods=[color.UNDERLINE, color.RED, color.BACKGROUND_RED],
+            color_scheme=[color.BACKGROUND_DEFAULT_COLOR, color.BRIGHT_GREEN],
+            draggable=True, resizable=True,
+        )
         logo = TObj.IMAGE_BOX(
             "Logo", coordinates=Coordinate(self.screen_size, 1, 1),
             size=Coordinate(self.screen_size, 3, 3),
@@ -131,6 +139,7 @@ class NoteMaster:
         # Add the objects to the screens.
         self.screen_dict["home"].add_object(box)
         self.screen_dict["home"].add_object(box2)
+        self.screen_dict["home"].add_object(box3)
         self.screen_dict["menu 1"].add_object(logo)
 
         self.terminal.input.add_keybind(self.screen_dict["home"], "move box up", "up", self.terminal.input.kb,
@@ -165,8 +174,15 @@ class NoteMaster:
     def main_loop(self) -> None:
         """Main"""
 
+        # Set up scrolling text
+        box3_text = "This is a test on scrolling out text to a box!! "
+        box3_index = 0
+        box3_forward = True
+        box3_pause = 10
+        box3_pause_counter = 0
         # box = self.screen.get_object_by_name("Bob Box")
         box2 = self.screen.get_object_by_name("Bob Box 2")
+        box3 = self.screen.get_object_by_name("Bob Box 3")
 
         past_times = []  # For debugging and timing purposes.
 
@@ -181,6 +197,21 @@ class NoteMaster:
                 box2.text = str(box2.mouse_over)
             else:
                 box2.text = "This is another box. I am happy!"
+
+            # Test scrolling text
+            box3.text = box3_text[:int(box3_index*2)]
+            if not box3_pause_counter:
+                if box3_forward:
+                    box3_index = min(box3_index + 1, (len(box3_text) - 1)/2)
+                else:
+                    box3_index = max(box3_index - 1, 0)
+
+                if box3_index == (len(box3_text) - 1)/2 or box3_index == 0:
+                    box3_forward = not box3_forward
+                    box3_pause_counter = 1
+            else:
+                box3_pause_counter = (box3_pause_counter + 1) % box3_pause
+
 
             # Update the display.
             self.terminal.refresh_screen()
